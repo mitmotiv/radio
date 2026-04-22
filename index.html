@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caspers Radio Dashboard</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -32,7 +31,7 @@
             align-items: center;
             justify-content: space-between;
             border: none; 
-            padding: 15px 20px; 
+            padding: 18px 25px; 
             border-radius: 16px; 
             text-decoration: none; 
             color: white; 
@@ -45,29 +44,16 @@
         
         .btn:active { transform: scale(0.96); filter: brightness(1.1); }
         
-        .btn-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .icon { font-size: 24px; }
 
-        .station-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            object-fit: cover;
-            background: rgba(255,255,255,0.1);
-        }
-
-        .icon-emoji { font-size: 24px; }
-
-        /* Farveprofiler */
-        .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .the-voice { background: #ffffff; color: #000 !important; }
-        .soft { background: linear-gradient(135deg, #00adef, #005d82); }
-        .popfm { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        /* Opdaterede farveprofiler efter dine ønsker */
+        .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); } /* Grøn */
+        .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); } /* Lyseblå */
+        .the-voice { background: #ffffff; color: #000; } /* Hvid knap med sort tekst */
+        .soft { background: linear-gradient(135deg, #00adef, #005d82); } /* Blå gradient */
+        .popfm { background: linear-gradient(135deg, #9b59b6, #8e44ad); } /* Lilla */
         
+        /* Specials sektion beholder deres farver */
         .pop-mix { background: linear-gradient(135deg, #662d91, #441e62); }
         .top-100 { background: linear-gradient(135deg, #fbb03b, #d97e00); }
         .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
@@ -82,59 +68,39 @@
     <h2>Hovedstationer</h2>
     <div class="grid">
         <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" class="btn nova">
-            <div class="btn-content">
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/8327661144505195323_0" class="station-icon" alt="Nova">
-                <span>Nova</span>
-            </div>
-            <span class="icon-emoji">✨</span>
+            <span>Nova</span> <span class="icon">✨</span>
         </a>
 
         <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" class="btn radio100">
-            <div class="btn-content">
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/1683666431519018994_0" class="station-icon" alt="Radio 100">
-                <span>Radio 100</span>
-            </div>
-            <span class="icon-emoji">💯</span>
+            <span>Radio 100</span> <span class="icon">💯</span>
         </a>
 
         <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" class="btn the-voice">
-            <div class="btn-content">
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/10145231948940859325_0" class="station-icon" alt="The Voice">
-                <span>The Voice</span>
-            </div>
-            <span class="icon-emoji">💬</span>
+            <span>The Voice</span> <span class="icon">💬</span>
         </a>
 
         <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" class="btn soft">
-            <div class="btn-content">
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/3339288371625312762_0" class="station-icon" alt="Soft">
-                <span>Soft</span>
-            </div>
-            <span class="icon-emoji">☁️</span>
+            <span>Soft</span> <span class="icon">☁️</span>
         </a>
 
         <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" class="btn popfm">
-            <div class="btn-content">
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/8587000254320362935_0" class="station-icon" alt="PopFM">
-                <span>PopFM</span>
-            </div>
-            <span class="icon-emoji">🎤</span>
+            <span>PopFM</span> <span class="icon">🎤</span>
         </a>
     </div>
 
     <h2>Specials & Mix</h2>
     <div class="grid">
         <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" class="btn pop-mix">
-            <span>Pop Mix</span> <span class="icon-emoji">🕺</span>
+            <span>Pop Mix</span> <span class="icon">🕺</span>
         </a>
         <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" class="btn top-100">
-            <span>Top 100</span> <span class="icon-emoji">🏆</span>
+            <span>Top 100</span> <span class="icon">🏆</span>
         </a>
         <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" class="btn soft-modern">
-            <span>Soft Modern</span> <span class="icon-emoji">🌿</span>
+            <span>Soft Modern</span> <span class="icon">🌿</span>
         </a>
         <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" class="btn soft-classic">
-            <span>Soft Classic</span> <span class="icon-emoji">🎻</span>
+            <span>Soft Classic</span> <span class="icon">🎻</span>
         </a>
     </div>
 
