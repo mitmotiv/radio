@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caspers Radio Dashboard</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { margin-bottom: 30px; color: #ff3e00; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        .btn { 
+            background: #1e1e1e; border: 1px solid #333; padding: 20px; border-radius: 15px; 
+            text-decoration: none; color: white; font-weight: bold; text-align: center;
+            transition: background 0.2s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { background: #333; }
+        .premium { border-color: #ffd700; }
+    </style>
+</head>
+<body>
+    <h1>Mine Streams</h1>
+    <div class="grid">
+        <a href="DIN_NOVA_PREMIUM_URL" class="btn premium">🎵 Nova Premium</a>
+        <a href="https://nova.bauerdigital.dk/nova_dk_aac" class="btn">📻 Nova FM (Normal)</a>
+        <a href="https://voice.bauerdigital.dk/voice_dk_aac" class="btn">🔥 The Voice</a>
+        <a href="https://soft.bauerdigital.dk/soft_dk_aac" class="btn">🧘 Radio Soft</a>
+    </div>
+</body>
+</html>
