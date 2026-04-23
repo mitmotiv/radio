@@ -4,12 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Radio Danmark Pro</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
     <style>
         :root {
             --bg: #080808;
+            --card-bg: rgba(255, 255, 255, 0.05);
             --text-main: #ffffff;
             --text-dim: rgba(255, 255, 255, 0.6);
+            --accent: #ffffff;
         }
 
         body {
@@ -17,16 +25,27 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 20px 15px 220px 15px;
+            padding: 20px 15px 250px 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
         }
 
-        .container {
+        .container { width: 100%; max-width: 550px; }
+
+        /* Søgefelt (Punkt 5) */
+        .search-box {
             width: 100%;
-            max-width: 550px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: white;
+            font-family: inherit;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            outline: none;
         }
 
         .section-title {
@@ -36,7 +55,6 @@
             color: var(--text-dim);
             margin: 25px 0 12px 5px;
             font-weight: 700;
-            opacity: 0.8;
         }
 
         .grid {
@@ -46,73 +64,95 @@
             width: 100%;
         }
 
+        /* Station Knapper (Punkt 3 & 10) */
         .btn {
             position: relative;
-            background: rgba(var(--brand-color), 0.1);
-            border: 1px solid rgba(var(--brand-color), 0.2);
+            background: rgba(var(--brand-color, 100, 100, 100), 0.1);
+            border: 1px solid rgba(var(--brand-color, 100, 100, 100), 0.2);
             border-radius: 16px;
             padding: 12px 6px; 
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
-            color: var(--text-dim);
-            transition: all 0.3s ease;
             cursor: pointer;
-            min-height: 75px;
+            min-height: 85px;
+            transition: all 0.2s ease;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .btn .icon { font-size: 20px; margin-bottom: 4px; opacity: 0.8; }
-        .btn span { font-size: 11px; font-weight: 500; text-align: center; width: 95%; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
         .btn.playing {
             background: rgba(var(--brand-color), 0.3);
-            border-color: rgba(var(--brand-color), 0.6);
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(var(--brand-color), 0.2);
+            border-color: rgba(var(--brand-color), 0.8);
+            transform: scale(0.98);
         }
 
-        /* BRAND FARVER */
-        .nova { --brand-color: 46, 204, 113; }
-        .r100 { --brand-color: 52, 152, 219; }
-        .soft { --brand-color: 41, 128, 185; }
-        .voice { --brand-color: 230, 230, 230; }
-        .pop { --brand-color: 155, 89, 182; }
-        .mix { --brand-color: 233, 30, 99; }
-        .dr { --brand-color: 231, 76, 60; }
-        .vinyl { --brand-color: 243, 156, 18; }
-        .retro { --brand-color: 211, 84, 0; }
-        .party { --brand-color: 241, 196, 15; }
+        .btn .icon { font-size: 22px; margin-bottom: 4px; }
+        .btn span { font-size: 11px; font-weight: 500; text-align: center; color: var(--text-dim); }
+        .btn.playing span { color: white; }
 
-        /* FOOTER PLAYER */
+        /* Favorit Stjerne (Punkt 4) */
+        .fav-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 12px;
+            opacity: 0.3;
+        }
+        .fav-btn.is-fav { opacity: 1; color: gold; }
+
+        /* Loading Spinner (Punkt 1) */
+        .loader {
+            display: none;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin-top: 5px;
+        }
+        .loading .loader { display: block; }
+        .loading .icon { display: none; }
+
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Footer Player & Visualizer (Punkt 8 & 9) */
         .footer-player {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 40px);
-            max-width: 400px;
-            background: rgba(20, 20, 20, 0.9);
+            max-width: 450px;
+            background: rgba(20, 20, 20, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 14px 22px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 28px;
+            padding: 16px 20px;
             z-index: 1000;
         }
 
-        .info-stack { display: flex; flex-direction: column; }
-        #current-label { font-size: 9px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; }
-        #current-name { font-size: 15px; font-weight: 700; }
+        .player-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        
+        /* Visualizer bars */
+        .visualizer { display: flex; gap: 3px; align-items: flex-end; height: 15px; }
+        .bar { width: 3px; background: #fff; border-radius: 2px; height: 3px; transition: 0.2s; }
+        .playing .bar { animation: fluctuate 0.8s infinite alternate; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes fluctuate { from { height: 3px; } to { height: 15px; } }
+
+        .controls { display: flex; align-items: center; gap: 15px; }
+        
+        /* Volume Slider (Punkt 9) */
+        .vol-container { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; opacity: 0.6; }
+        .vol-slider { flex-grow: 1; accent-color: #fff; height: 4px; cursor: pointer; }
 
         .play-btn {
-            width: 46px;
-            height: 46px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background: #fff;
             border: none;
@@ -120,99 +160,184 @@
             align-items: center;
             justify-content: center;
         }
-        .play-btn svg { fill: #000; width: 20px; height: 20px; }
 
-        /* SKJUL VIDEOEN MEN LAD DEN VÆRE I DOM'en */
         #audio-engine { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="section-title">Populære</div>
-    <div class="grid">
-        <div onclick="play('https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', 'Nova', this)" class="btn nova"><span class="icon">✨</span><span>Nova</span></div>
-        <div onclick="play('https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', 'Radio 100', this)" class="btn r100"><span class="icon">💯</span><span>Radio 100</span></div>
-        <div onclick="play('https://live-bauerdk.sharp-stream.com/soft-premium_96.aac', 'Radio Soft', this)" class="btn soft"><span class="icon">☁️</span><span>Radio Soft</span></div>
-        <div onclick="play('https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac', 'The Voice', this)" class="btn voice"><span class="icon">🎤</span><span>The Voice</span></div>
-        <div onclick="play('https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac', 'PopFM', this)" class="btn pop"><span class="icon">🎸</span><span>PopFM</span></div>
-        <div onclick="play('https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac', 'Mix 7', this)" class="btn mix"><span class="icon">🕺</span><span>Mix 7</span></div>
+    <input type="text" class="search-box" placeholder="Søg efter station..." oninput="render(this.value)">
+
+    <div id="favorites-section" style="display:none;">
+        <div class="section-title">Dine Favoritter</div>
+        <div id="fav-grid" class="grid"></div>
     </div>
 
-    <div class="section-title">DR Stationer</div>
-    <div class="grid">
-        <div onclick="play('https://drliveradio2.akamaized.net/hls/live/2118698/p1/playlist-320000.m3u8', 'P1', this)" class="btn dr"><span class="icon">📰</span><span>P1</span></div>
-        <div onclick="play('https://drliveradio2.akamaized.net/hls/live/2118698/p2/playlist-320000.m3u8', 'P2', this)" class="btn dr"><span class="icon">🎻</span><span>P2</span></div>
-        <div onclick="play('https://drliveradio2.akamaized.net/hls/live/2118698/p3/playlist-320000.m3u8', 'P3', this)" class="btn dr"><span class="icon">⚡</span><span>P3</span></div>
-        <div onclick="play('https://drliveradio2.akamaized.net/hls/live/2118698/p4sjaelland/masterab.m3u8', 'P4', this)" class="btn dr"><span class="icon">📍</span><span>P4</span></div>
-        <div onclick="play('https://drliveradio2.akamaized.net/hls/live/2118698/p5/playlist-320000.m3u8', 'P5', this)" class="btn dr"><span class="icon">☕</span><span>P5</span></div>
-    </div>
+    <div class="section-title">Alle Stationer</div>
+    <div id="main-grid" class="grid"></div>
 </div>
 
 <div class="footer-player">
-    <div class="info-stack">
-        <div id="current-label">Vælg station</div>
-        <div id="current-name">Radio Danmark Pro</div>
+    <div class="player-top">
+        <div class="info-stack">
+            <div id="current-label" style="font-size: 9px; text-transform: uppercase; opacity: 0.6; font-weight: 700;">Klar til lytning</div>
+            <div id="current-name" style="font-size: 16px; font-weight: 700;">Radio Danmark Pro</div>
+        </div>
+        
+        <div class="controls">
+            <div class="visualizer" id="viz">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            <button class="play-btn" onclick="togglePlay()">
+                <svg id="ctrl-icon" viewBox="0 0 24 24" width="22"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+        </div>
     </div>
-    <button class="play-btn" onclick="togglePlay()">
-        <svg id="ctrl-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </button>
+
+    <div class="vol-container">
+        <span style="font-size: 12px;">🔈</span>
+        <input type="range" class="vol-slider" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)">
+        <span style="font-size: 12px;">🔊</span>
+    </div>
 </div>
 
 <video id="audio-engine" playsinline x-webkit-airplay="allow"></video>
 
 <script>
-    const engine = document.getElementById('audio-engine');
-    const ctrlIcon = document.getElementById('ctrl-icon');
-    const nameLabel = document.getElementById('current-name');
-    const statusLabel = document.getElementById('current-label');
+    // 3. JSON Stationsliste
+    const stations = [
+        { id: 1, name: 'Nova', url: 'https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', icon: '✨', color: '46, 204, 113' },
+        { id: 2, name: 'Radio 100', url: 'https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', icon: '💯', color: '52, 152, 219' },
+        { id: 3, name: 'Radio Soft', url: 'https://live-bauerdk.sharp-stream.com/soft-premium_96.aac', icon: '☁️', color: '41, 128, 185' },
+        { id: 4, name: 'The Voice', url: 'https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac', icon: '🎤', color: '230, 230, 230' },
+        { id: 5, name: 'P1', url: 'https://drliveradio2.akamaized.net/hls/live/2118698/p1/playlist-320000.m3u8', icon: '📰', color: '231, 76, 60' },
+        { id: 6, name: 'P3', url: 'https://drliveradio2.akamaized.net/hls/live/2118698/p3/playlist-320000.m3u8', icon: '⚡', color: '231, 76, 60' },
+        { id: 7, name: 'P4 Sjælland', url: 'https://drliveradio2.akamaized.net/hls/live/2118698/p4sjaelland/masterab.m3u8', icon: '📍', color: '231, 76, 60' },
+        { id: 8, name: 'Radio Vinyl', url: 'https://live-bauerdk.sharp-stream.com/RP01_premium_96.aac', icon: '📻', color: '243, 156, 18' },
+        { id: 9, name: 'Retro', url: 'https://streammp3.retro-radio.dk/retro-mp3', icon: '🎙️', color: '211, 84, 0' }
+    ];
 
-    function play(url, name, el) {
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('playing'));
-        el.classList.add('playing');
+    const engine = document.getElementById('audio-engine');
+    const hls = new Hls();
+    let favorites = JSON.parse(localStorage.getItem('radio_favs')) || [];
+
+    // 3. Render Funktion (Punkt 3, 4 & 5)
+    function render(filter = "") {
+        const mainGrid = document.getElementById('main-grid');
+        const favGrid = document.getElementById('fav-grid');
+        const favSection = document.getElementById('favorites-section');
         
-        nameLabel.textContent = name;
-        statusLabel.textContent = "Spiller nu";
-        document.title = "▶ " + name;
+        mainGrid.innerHTML = "";
+        favGrid.innerHTML = "";
+
+        const filtered = stations.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+
+        filtered.forEach(s => {
+            const isFav = favorites.includes(s.id);
+            const html = `
+                <div id="st-${s.id}" onclick="play('${s.url}', '${s.name}', this, '${s.color}')" class="btn" style="--brand-color: ${s.color}" aria-label="Spil ${s.name}">
+                    <div class="fav-btn ${isFav ? 'is-fav' : ''}" onclick="toggleFav(event, ${s.id})">★</div>
+                    <div class="icon">${s.icon}</div>
+                    <div class="loader"></div>
+                    <span>${s.name}</span>
+                </div>
+            `;
+            
+            if (isFav && !filter) {
+                favGrid.innerHTML += html;
+            }
+            mainGrid.innerHTML += html;
+        });
+
+        favSection.style.display = (favorites.length > 0 && !filter) ? 'block' : 'none';
+    }
+
+    // 1 & 2. Play Logik med HLS & Loading (Punkt 1, 2 & 7)
+    function play(url, name, el, color) {
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('playing', 'loading'));
+        el.classList.add('loading'); // Vis spinner
         
-        // VIGTIGT: Vi nulstiller SRC helt hver gang for at tvinge WVC til at opdage streamen
+        document.getElementById('current-name').textContent = name;
+        document.getElementById('current-label').textContent = "Forbinder...";
+        
+        // Reset engine for WVC support
         engine.pause();
         engine.removeAttribute('src');
-        engine.load();
-        
-        engine.src = url;
-        engine.load();
-        engine.play().catch(e => console.log("Klik påkrævet"));
-        
-        updateIcon(true);
 
-        // MediaSession sikrer at Apple TV viser metadata selvom vi bruger et video-tag
+        if (url.includes('m3u8')) {
+            if (Hls.isSupported()) {
+                hls.loadSource(url);
+                hls.attachMedia(engine);
+            } else if (engine.canPlayType('application/vnd.apple.mpegurl')) {
+                engine.src = url;
+            }
+        } else {
+            engine.src = url;
+        }
+
+        engine.play().catch(() => console.log("User interaction needed"));
+        
+        // Media Session (System info)
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: name,
                 artist: 'Radio Danmark Pro',
-                album: 'Direkte',
                 artwork: [{ src: 'https://cdn-icons-png.flaticon.com/512/304/304164.png', sizes: '512x512', type: 'image/png' }]
             });
-            navigator.mediaSession.setActionHandler('play', () => engine.play());
-            navigator.mediaSession.setActionHandler('pause', () => engine.pause());
         }
     }
 
-    function togglePlay() {
-        if (engine.paused) { engine.play(); updateIcon(true); } 
-        else { engine.pause(); updateIcon(false); }
+    // 4. Favorit logik
+    function toggleFav(e, id) {
+        e.stopPropagation();
+        if (favorites.includes(id)) {
+            favorites = favorites.filter(fid => fid !== id);
+        } else {
+            favorites.push(id);
+        }
+        localStorage.setItem('radio_favs', JSON.stringify(favorites));
+        render();
     }
 
+    // 9. Volumen
+    function setVolume(val) { engine.volume = val; }
+
+    function togglePlay() {
+        engine.paused ? engine.play() : engine.pause();
+    }
+
+    // Event Listeners (Feedback & Icons)
+    engine.onplaying = () => {
+        const activeBtn = document.querySelector('.loading');
+        if (activeBtn) {
+            activeBtn.classList.remove('loading');
+            activeBtn.classList.add('playing');
+        }
+        document.getElementById('current-label').textContent = "Spiller nu";
+        document.getElementById('viz').classList.add('playing');
+        updateIcon(true);
+    };
+
+    engine.onpause = () => {
+        document.getElementById('viz').classList.remove('playing');
+        updateIcon(false);
+    };
+
+    // 7. Fejlhåndtering
+    engine.onerror = () => {
+        alert("Fejl: Kunne ikke hente streamen. Prøv en anden station.");
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('loading', 'playing'));
+    };
+
     function updateIcon(playing) {
-        ctrlIcon.innerHTML = playing 
+        document.getElementById('ctrl-icon').innerHTML = playing 
             ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' 
             : '<path d="M8 5v14l11-7z"/>';
     }
 
-    engine.onplay = () => updateIcon(true);
-    engine.onpause = () => updateIcon(false);
+    // Start app
+    render();
 </script>
-
 </body>
 </html>
