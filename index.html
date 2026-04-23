@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Player Pro</title>
+    <title>Radio Streamer Pro</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -14,11 +14,11 @@
             align-items: center; 
             padding: 20px; 
             margin: 0;
-            min-height: 100vh;
+            padding-bottom: 120px; /* Plads til afspilleren i bunden */
         }
         
         h1 { margin-bottom: 5px; color: #f39c12; font-size: 28px; font-weight: 800; }
-        .status-text { color: #aaa; font-size: 14px; margin-bottom: 25px; height: 20px; }
+        .status-text { color: #aaa; font-size: 14px; margin-bottom: 25px; }
         
         h2 { width: 100%; max-width: 400px; font-size: 14px; color: #aaa; margin: 25px 0 10px 5px; text-transform: uppercase; letter-spacing: 2px; }
         
@@ -42,20 +42,11 @@
             font-weight: bold; 
             font-size: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: all 0.2s ease;
+            transition: transform 0.1s;
             -webkit-tap-highlight-color: transparent;
         }
         
-        .btn:active { transform: scale(0.98); }
-        
-        /* Indikator for når en station spiller */
-        .btn.playing { 
-            ring: 3px solid #fff;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-            transform: scale(1.02);
-        }
-
-        .play-icon { font-size: 20px; opacity: 0.8; }
+        .btn:active { transform: scale(0.96); }
 
         /* Farveprofiler */
         .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
@@ -68,94 +59,101 @@
         .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
         .soft-classic { background: linear-gradient(135deg, #5b7d87, #354a50); }
 
-        .footer-info { margin-top: 40px; color: #666; font-size: 12px; text-align: center; max-width: 300px; line-height: 1.5; }
+        /* Fastgjort afspiller i bunden for Web Video Caster */
+        .player-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e1e1e;
+            padding: 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 2px solid #333;
+        }
+
+        audio {
+            width: 100%;
+            max-width: 400px;
+            height: 40px;
+        }
+
+        #current-station-name {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #f39c12;
+        }
     </style>
 </head>
 <body>
 
     <h1>Radio Player</h1>
-    <p id="status" class="status-text">Klar til afspilning</p>
+    <p class="status-text">Tryk for at sende til afspiller</p>
 
     <div class="grid">
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', 'Nova', this)" class="btn nova">
-            <span>Nova</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', 'Nova')" class="btn nova">
+            <span>Nova</span> <span>✨</span>
         </button>
 
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', 'Radio 100', this)" class="btn radio100">
-            <span>Radio 100</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', 'Radio 100')" class="btn radio100">
+            <span>Radio 100</span> <span>💯</span>
         </button>
 
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac', 'The Voice', this)" class="btn the-voice">
-            <span>The Voice</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac', 'The Voice')" class="btn the-voice">
+            <span>The Voice</span> <span>💬</span>
         </button>
 
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/soft-premium_96.aac', 'Soft', this)" class="btn soft">
-            <span>Soft</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/soft-premium_96.aac', 'Soft')" class="btn soft">
+            <span>Soft</span> <span>☁️</span>
         </button>
 
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac', 'PopFM', this)" class="btn popfm">
-            <span>PopFM</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac', 'PopFM')" class="btn popfm">
+            <span>PopFM</span> <span>🎤</span>
         </button>
     </div>
 
     <h2>Specials & Mix</h2>
     <div class="grid">
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac', 'Pop Mix', this)" class="btn pop-mix">
-            <span>Pop Mix</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac', 'Pop Mix')" class="btn pop-mix">
+            <span>Pop Mix</span> <span>🕺</span>
         </button>
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac', 'Top 100', this)" class="btn top-100">
-            <span>Top 100</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac', 'Top 100')" class="btn top-100">
+            <span>Top 100</span> <span>🏆</span>
         </button>
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac', 'Soft Modern', this)" class="btn soft-modern">
-            <span>Soft Modern</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac', 'Soft Modern')" class="btn soft-modern">
+            <span>Soft Modern</span> <span>🌿</span>
         </button>
-        <button onclick="toggleRadio('https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac', 'Soft Classic', this)" class="btn soft-classic">
-            <span>Soft Classic</span> <span class="play-icon">▶️</span>
+        <button onclick="loadStream('https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac', 'Soft Classic')" class="btn soft-classic">
+            <span>Soft Classic</span> <span>🎻</span>
         </button>
     </div>
 
-    <p class="footer-info">
-        Tryk på en station for at starte. Tryk igen for at stoppe.<br>
-        Optimerede til <b>Web Video Caster</b>.
-    </p>
+    <div class="player-container">
+        <div id="current-station-name">Ingen station valgt</div>
+        <audio id="main-audio-player" controls>
+            <source id="audio-source" src="" type="audio/aac">
+            Din browser understøtter ikke audio elementet.
+        </audio>
+    </div>
 
     <script>
-        let currentAudio = new Audio();
-        let currentUrl = '';
-        const statusElement = document.getElementById('status');
+        const audioPlayer = document.getElementById('main-audio-player');
+        const audioSource = document.getElementById('audio-source');
+        const stationLabel = document.getElementById('current-station-name');
 
-        function toggleRadio(url, name, btn) {
-            const icon = btn.querySelector('.play-icon');
-
-            // Hvis vi trykker på den station, der allerede spiller -> STOP
-            if (currentUrl === url && !currentAudio.paused) {
-                currentAudio.pause();
-                resetUI();
-                statusElement.textContent = "Pause: " + name;
-                return;
-            }
-
-            // Hvis en anden station spiller -> STOP den først
-            currentAudio.pause();
-            resetUI();
-
-            // Start den nye station
-            currentAudio.src = url;
-            currentAudio.play().catch(e => {
-                statusElement.textContent = "Fejl: Browseren blokerede lyden.";
-            });
+        function loadStream(url, name) {
+            // Opdater kilden i HTML-elementet
+            audioSource.src = url;
+            stationLabel.textContent = "Valgt: " + name;
             
-            currentUrl = url;
-            btn.classList.add('playing');
-            icon.textContent = '⏸️';
-            statusElement.textContent = "Spiller nu: " + name;
-        }
+            // Genindlæs og afspil
+            audioPlayer.load();
+            audioPlayer.play();
 
-        function resetUI() {
-            document.querySelectorAll('.btn').forEach(b => {
-                b.classList.remove('playing');
-                b.querySelector('.play-icon').textContent = '▶️';
-            });
+            // Web Video Caster vil nu se at et <audio> tag forsøger at afspille en stream
+            // og bør automatisk spørge om du vil caste den.
         }
     </script>
 
