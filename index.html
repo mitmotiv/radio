@@ -111,9 +111,6 @@
         }
         .btn.is-fav .fav-heart { opacity: 1; color: var(--accent); }
 
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        .btn.loading { animation: pulse 1s infinite; border-color: white; }
-
         .btn .icon { font-size: 22px; margin-bottom: 4px; }
         .btn span { font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; padding: 0 4px; }
 
@@ -121,7 +118,6 @@
             background: rgba(var(--brand-color), 0.2);
             border-color: rgba(var(--brand-color), 0.5);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         /* BRAND FARVER */
@@ -168,50 +164,28 @@
         @keyframes bar-bounce { 0% { height: 3px; } 100% { height: 15px; } }
 
         .volume-container { display: flex; align-items: center; gap: 12px; }
-        .volume-container svg { width: 18px; fill: white; opacity: 0.6; cursor: pointer; transition: 0.2s; }
-        .volume-container svg:hover { opacity: 1; }
-        .volume-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            background: rgba(255,255,255,0.1);
-            height: 4px;
-            border-radius: 2px;
-            outline: none;
-        }
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
+        .volume-slider { flex: 1; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; outline: none; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: white; border-radius: 50%; cursor: pointer; }
 
-        .play-btn {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            background: white;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: transform 0.2s;
-        }
-        .play-btn:active { transform: scale(0.9); }
+        .play-btn { width: 54px; height: 54px; border-radius: 50%; background: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
         .play-btn svg { fill: black; width: 24px; }
 
-        #audio-engine { display: none; }
+        /* DETTE FIXER APPLE TV VINDUET: Video-tagget er aktivt men usynligt */
+        #audio-engine { 
+            position: absolute;
+            width: 1px; 
+            height: 1px; 
+            opacity: 0.01;
+            pointer-events: none;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="Søg efter stationer..." aria-label="Søg radiostation">
+        <input type="text" class="search-input" id="searchInput" placeholder="Søg efter stationer...">
     </div>
     <div id="station-list"></div>
 </div>
@@ -227,17 +201,17 @@
                 </div>
             </div>
         </div>
-        <button class="play-btn" onclick="togglePlay()" aria-label="Afspil eller pause">
+        <button class="play-btn" onclick="togglePlay()">
             <svg id="ctrl-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </button>
     </div>
     <div class="volume-container">
-        <svg id="mute-icon" onclick="toggleMute()" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
-        <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)" aria-label="Lydstyrke">
+        <svg id="mute-icon" style="width:18px; fill:white; opacity:0.6;" onclick="toggleMute()" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+        <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
     </div>
 </div>
 
-<video id="audio-engine" playsinline webkit-playsinline x-webkit-airplay="allow" preload="auto"></video>
+<video id="audio-engine" playsinline webkit-playsinline x-webkit-airplay="allow"></video>
 
 <script>
     const stations = [
@@ -269,39 +243,30 @@
     const ctrlIcon = document.getElementById('ctrl-icon');
     const nameLabel = document.getElementById('current-name');
     const statusLabel = document.getElementById('current-label');
-    const volSlider = document.getElementById('vol-slider');
-    const muteIcon = document.getElementById('mute-icon');
     const viz = document.getElementById('viz');
     
-    let hls = new Hls();
+    let hls = null;
     let favorites = JSON.parse(localStorage.getItem('radioFavs')) || [];
     let currentStationId = null;
-    let activeStationName = "Radio Danmark Pro";
+    let activeStationName = "";
 
-    const savedVol = localStorage.getItem('radioVol') || 1;
-    engine.volume = savedVol;
-    volSlider.value = savedVol;
+    function initMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => engine.play());
+            navigator.mediaSession.setActionHandler('pause', () => engine.pause());
+        }
+    }
 
-    // MediaSession setup
-    function updateMediaMetadata(name) {
+    function updateMetadata(name) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: name,
                 artist: 'Radio Danmark Pro',
-                album: 'Live Radio',
-                artwork: [{ 
-                    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', 
-                    sizes: '512x512', 
-                    type: 'image/png' 
-                }]
+                artwork: [{ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', sizes: '512x512', type: 'image/png' }]
             });
+            // VIGTIGT: Tvinger Apple TV til at se det som aktiv afspilning
+            navigator.mediaSession.playbackState = "playing";
         }
-    }
-
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', () => engine.play());
-        navigator.mediaSession.setActionHandler('pause', () => engine.pause());
-        navigator.mediaSession.setActionHandler('stop', () => { engine.pause(); engine.src = ""; });
     }
 
     function render(filter = '') {
@@ -310,12 +275,12 @@
         const filtered = stations.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
         
         const favStations = filtered.filter(s => favorites.includes(s.id));
-        if (favStations.length > 0) { renderSection(list, "⭐ Dine Favoritter", favStations, true); }
+        if (favStations.length > 0) renderSection(list, "⭐ Favoritter", favStations, true);
 
         const categories = [...new Set(stations.map(s => s.cat))];
         categories.forEach(cat => {
             const catStations = filtered.filter(s => s.cat === cat);
-            if (catStations.length > 0) { renderSection(list, cat, catStations, false); }
+            if (catStations.length > 0) renderSection(list, cat, catStations, false);
         });
     }
 
@@ -325,11 +290,9 @@
         const grid = document.createElement('div');
         grid.className = 'grid';
         stationGroup.forEach(s => {
-            const isFav = favorites.includes(s.id);
-            const isPlaying = currentStationId === s.id;
             const btn = document.createElement('div');
-            btn.className = `btn ${s.class} ${isFav ? 'is-fav' : ''} ${isPlaying ? 'playing' : ''}`;
-            btn.setAttribute('onclick', `handleBtnClick(event, '${s.url}', '${s.name}', this, '${s.id}')`);
+            btn.className = `btn ${s.class} ${favorites.includes(s.id) ? 'is-fav' : ''} ${currentStationId === s.id ? 'playing' : ''}`;
+            btn.onclick = (e) => handleBtnClick(e, s);
             btn.innerHTML = `<div class="fav-heart" onclick="toggleFav(event, '${s.id}')">❤</div><span class="icon">${s.icon}</span><span>${s.name}</span>`;
             grid.appendChild(btn);
         });
@@ -337,11 +300,59 @@
         parent.appendChild(section);
     }
 
-    function handleBtnClick(e, url, name, el, id) {
+    function handleBtnClick(e, s) {
         if (e.target.classList.contains('fav-heart')) return;
-        currentStationId = id;
-        activeStationName = name;
-        play(url, name, el);
+        currentStationId = s.id;
+        activeStationName = s.name;
+        play(s.url, s.name);
+        render(document.getElementById('searchInput').value);
+    }
+
+    function play(url, name) {
+        if (hls) { hls.destroy(); }
+        
+        statusLabel.textContent = "Forbinder...";
+        nameLabel.firstChild.textContent = name + " ";
+        updateMetadata(name);
+
+        if (url.includes('m3u8')) {
+            if (Hls.isSupported()) {
+                // Konfigureret til kun audio for at hjælpe AirPlay
+                hls = new Hls({ enableWorker: true, defaultAudioCodec: 'mp4a.40.2' });
+                hls.loadSource(url);
+                hls.attachMedia(engine);
+            } else {
+                engine.src = url;
+            }
+        } else {
+            engine.src = url;
+        }
+        engine.play().catch(e => console.log("Auto-play blokeret"));
+    }
+
+    function togglePlay() { 
+        if (!engine.src && !hls) return;
+        engine.paused ? engine.play() : engine.pause(); 
+    }
+
+    function setVolume(val) { engine.volume = val; localStorage.setItem('radioVol', val); }
+    function toggleMute() { engine.muted = !engine.muted; }
+
+    engine.onplaying = () => {
+        statusLabel.textContent = "Spiller nu";
+        viz.classList.add('active');
+        updateIcon(true);
+        navigator.mediaSession.playbackState = "playing";
+    };
+
+    engine.onpause = () => {
+        viz.classList.remove('active');
+        updateIcon(false);
+        navigator.mediaSession.playbackState = "paused";
+    };
+
+    function updateIcon(playing) {
+        ctrlIcon.innerHTML = playing ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
     }
 
     function toggleFav(e, id) {
@@ -351,93 +362,13 @@
         render(document.getElementById('searchInput').value);
     }
 
-    function play(url, name, el) {
-        hls.detachMedia();
-        hls.destroy();
-        hls = new Hls();
-
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('playing', 'loading'));
-        el.classList.add('loading');
-        
-        nameLabel.firstChild.textContent = name + " ";
-        statusLabel.textContent = "Opretter forbindelse...";
-        document.title = "⌛ " + name;
-
-        if (url.includes('m3u8')) {
-            if (Hls.isSupported()) {
-                hls.loadSource(url);
-                hls.attachMedia(engine);
-            } else if (engine.canPlayType('application/vnd.apple.mpegurl')) {
-                engine.src = url;
-            }
-        } else {
-            engine.src = url;
-        }
-
-        engine.play().then(() => {
-            updateMediaMetadata(name);
-        }).catch(() => { 
-            statusLabel.textContent = "Klik på Play for at starte"; 
-            el.classList.remove('loading'); 
-        });
-    }
-
-    function togglePlay() { 
-        if (!engine.src && !hls.url) {
-            statusLabel.textContent = "Vælg en station først";
-            return;
-        }
-        engine.paused ? engine.play() : engine.pause(); 
-    }
-
-    function setVolume(val) { 
-        engine.volume = val; 
-        localStorage.setItem('radioVol', val);
-        updateMuteIcon(val == 0);
-    }
-
-    function toggleMute() {
-        engine.muted = !engine.muted;
-        updateMuteIcon(engine.muted);
-    }
-
-    function updateMuteIcon(isMuted) {
-        muteIcon.style.fill = isMuted ? '#ff4757' : 'white';
-        muteIcon.style.opacity = isMuted ? '1' : '0.6';
-    }
-
-    engine.onplaying = () => {
-        const loadingBtn = document.querySelector('.btn.loading');
-        if (loadingBtn) loadingBtn.classList.replace('loading', 'playing');
-        statusLabel.textContent = "Spiller nu";
-        viz.classList.add('active');
-        updateIcon(true);
-        document.title = "▶ " + activeStationName;
-        updateMediaMetadata(activeStationName);
-    };
-
-    engine.onpause = () => {
-        viz.classList.remove('active');
-        updateIcon(false);
-        document.title = "Radio Danmark Pro";
-    };
-
-    engine.onerror = () => {
-        statusLabel.textContent = "Stream fejl - prøv igen";
-        document.title = "Radio Danmark Pro";
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('loading', 'playing'));
-    };
-
-    function updateIcon(playing) {
-        ctrlIcon.innerHTML = playing 
-            ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' 
-            : '<path d="M8 5v14l11-7z"/>';
-    }
-
     document.getElementById('searchInput').oninput = (e) => render(e.target.value);
     
-    window.onunload = () => hls.destroy();
-
+    // Init
+    const savedVol = localStorage.getItem('radioVol') || 1;
+    engine.volume = savedVol;
+    document.getElementById('vol-slider').value = savedVol;
+    initMediaSession();
     render();
 </script>
 
