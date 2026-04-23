@@ -167,6 +167,23 @@
         .play-btn { width: 54px; height: 54px; border-radius: 50%; background: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .play-btn svg { fill: black; width: 24px; }
 
+        /* AirPlay knap */
+        .airplay-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 10px;
+        }
+        .airplay-btn svg { width: 14px; fill: white; }
+
         /* SKJUL LYDMOTOREN */
         #audio-engine { display: none; }
     </style>
@@ -191,6 +208,10 @@
                 </div>
             </div>
         </div>
+        <button class="airplay-btn" id="airplay-btn" onclick="showAirplayPicker()" style="display:none;">
+            <svg viewBox="0 0 24 24"><path d="M6 22h12l-6-6zM21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v-2H3V5h18v12h-4v2h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+            AirPlay
+        </button>
         <button class="play-btn" onclick="togglePlay()">
             <svg id="ctrl-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </button>
@@ -201,7 +222,8 @@
     </div>
 </div>
 
-<audio id="audio-engine" preload="auto" x-webkit-airplay="allow"></audio>
+<!-- VIGTIGT: x-webkit-airplay="allow" + disableRemotePlayback=false signalerer audio-only til AirPlay -->
+<audio id="audio-engine" preload="auto" x-webkit-airplay="allow" crossorigin="anonymous"></audio>
 
 <script>
     const stations = [
@@ -235,18 +257,33 @@
     const statusLabel = document.getElementById('current-label');
     const viz = document.getElementById('viz');
     
+    // === AIRPLAY AUDIO-ONLY KONFIGURATION ===
+    // Disse attributter fortæller iOS/AirPlay at dette er REN LYD (som Spotify),
+    // ikke video. Apple TV viser derfor Now Playing-skærmen i stedet for at åbne
+    // en video-afspiller.
+    engine.setAttribute('x-webkit-airplay', 'allow');
+    engine.setAttribute('airplay', 'allow');
+    // playsinline forhindrer fullscreen video-takeover på iOS
+    engine.setAttribute('playsinline', '');
+    engine.setAttribute('webkit-playsinline', '');
+    
     let hls = null;
     let favorites = JSON.parse(localStorage.getItem('radioFavs')) || [];
     let currentStationId = null;
     let activeStationName = "";
+    let activeStationArt = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png';
 
     function updateMetadata(name) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: name,
                 artist: 'Radio Danmark Pro',
-                album: 'Live Radio Stream',
-                artwork: [{ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', sizes: '512x512', type: 'image/png' }]
+                album: 'Live Radio',
+                artwork: [
+                    { src: activeStationArt, sizes: '96x96', type: 'image/png' },
+                    { src: activeStationArt, sizes: '192x192', type: 'image/png' },
+                    { src: activeStationArt, sizes: '512x512', type: 'image/png' }
+                ]
             });
             navigator.mediaSession.playbackState = "playing";
         }
@@ -294,20 +331,30 @@
         nameLabel.firstChild.textContent = name + " ";
         updateMetadata(name);
 
-        if (url.includes('m3u8')) {
-            if (Hls.isSupported()) {
+        const isHls = url.includes('m3u8');
+
+        if (isHls) {
+            // === VIGTIG ÆNDRING FOR APPLE TV AIRPLAY ===
+            // På iOS Safari (og dermed for AirPlay handoff) SKAL vi bruge native 
+            // HLS-afspilning – IKKE hls.js med MSE. 
+            // Native HLS sender den originale m3u8 URL videre til Apple TV'et,
+            // som så selv afspiller det som lyd. 
+            // Hls.js bruger MediaSource Extensions, som AirPlay kun kan sende som 
+            // video-mirror (derfor popper video-vinduet op).
+            if (engine.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari iOS/macOS + iPadOS - perfekt AirPlay handoff
+                engine.src = url;
+            } else if (Hls.isSupported()) {
+                // Fallback for Chrome/Firefox på desktop (ingen AirPlay alligevel)
                 hls = new Hls({ 
                     enableWorker: true,
-                    // Optimer til lyd-only HLS
                     defaultAudioCodec: 'mp4a.40.2'
                 });
                 hls.loadSource(url);
                 hls.attachMedia(engine);
-            } else if (engine.canPlayType('application/vnd.apple.mpegurl')) {
-                // Native support for Safari og AirPlay lyd-handoff
-                engine.src = url;
             }
         } else {
+            // Direkte AAC/MP3 streams - altid audio-only via AirPlay
             engine.src = url;
         }
         engine.play().catch(() => {});
@@ -320,8 +367,37 @@
 
     function setVolume(val) { engine.volume = val; localStorage.setItem('radioVol', val); }
 
+    // === AIRPLAY PICKER ===
+    // Giver brugeren en knap til at vælge AirPlay-target direkte fra appen
+    function showAirplayPicker() {
+        if (engine.webkitShowPlaybackTargetPicker) {
+            engine.webkitShowPlaybackTargetPicker();
+        }
+    }
+
+    // Vis AirPlay-knap hvis enheden understøtter det
+    if (window.WebKitPlaybackTargetAvailabilityEvent) {
+        engine.addEventListener('webkitplaybacktargetavailabilitychanged', (event) => {
+            const btn = document.getElementById('airplay-btn');
+            if (event.availability === 'available') {
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+    }
+
+    // Detekter når der aktivt castes til AirPlay-target (f.eks. Apple TV)
+    engine.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', () => {
+        if (engine.webkitCurrentPlaybackTargetIsWireless) {
+            statusLabel.textContent = "Spiller på AirPlay";
+        } else if (!engine.paused) {
+            statusLabel.textContent = "Spiller nu";
+        }
+    });
+
     engine.onplaying = () => {
-        statusLabel.textContent = "Spiller nu";
+        statusLabel.textContent = engine.webkitCurrentPlaybackTargetIsWireless ? "Spiller på AirPlay" : "Spiller nu";
         viz.classList.add('active');
         ctrlIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
         updateMetadata(activeStationName);
