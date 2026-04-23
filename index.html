@@ -3,179 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Player</title>
+    <title>Radio Stream</title>
     <style>
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: #121212; 
-            color: white; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px; 
-            margin: 0;
-            padding-bottom: 160px;
+            font-family: -apple-system, sans-serif; 
+            background: #121212; color: white; 
+            display: flex; flex-direction: column; align-items: center; 
+            padding: 20px; margin: 0; padding-bottom: 160px;
         }
         
-        #main-title { 
-            margin-bottom: 5px; 
-            color: #f39c12; 
-            font-size: 28px; 
-            font-weight: 800; 
-            text-align: center;
-        }
-
-        .status-header { color: #aaa; font-size: 14px; margin-bottom: 25px; }
+        h1 { color: #f39c12; font-size: 24px; margin-bottom: 20px; text-align: center; }
         
         .grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 12px; 
-            width: 100%; 
-            max-width: 400px; 
+            display: grid; grid-template-columns: 1fr; gap: 10px; 
+            width: 100%; max-width: 400px; 
         }
         
         .btn { 
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 25px; 
-            border-radius: 16px; 
-            text-decoration: none; 
-            color: white; 
-            font-weight: bold; 
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.1s;
-            border: none;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px; border-radius: 12px; border: none;
+            color: white; font-weight: bold; font-size: 18px;
+            cursor: pointer; transition: 0.2s;
         }
         
-        .btn:active { transform: scale(0.97); filter: brightness(1.2); }
+        .btn:active { transform: scale(0.98); }
 
-        /* Farver */
-        .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
+        /* Bauer Farver */
+        .nova { background: #27ae60; }
+        .radio100 { background: #2980b9; }
         .the-voice { background: #ffffff; color: #000; }
-        .soft { background: linear-gradient(135deg, #00adef, #005d82); }
-        .popfm { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-        .pop-mix { background: linear-gradient(135deg, #662d91, #441e62); }
-        .top-100 { background: linear-gradient(135deg, #fbb03b, #d97e00); }
-        .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
-        .soft-classic { background: linear-gradient(135deg, #5b7d87, #354a50); }
+        .soft { background: #00adef; }
+        .popfm { background: #8e44ad; }
+        .special { background: #333; }
 
-        /* Bund-afspiller */
+        /* Afspiller-bar i bunden */
         .footer-player {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #1e1e1e;
-            padding: 20px 0;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-top: 1px solid #333;
-            z-index: 9999;
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: #1e1e1e; padding: 20px 0;
+            display: flex; flex-direction: column; align-items: center;
+            border-top: 1px solid #333; z-index: 1000;
         }
 
-        #current-label {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #f39c12;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
+        #station-name { font-weight: bold; color: #f39c12; margin-bottom: 10px; }
+        
+        /* Video-tag bruges fordi WVC opfanger det bedre end audio til Chromecast */
+        video { width: 90%; max-width: 400px; height: 45px; border-radius: 4px; }
 
-        audio {
-            width: 90%;
-            max-width: 400px;
-        }
+        /* Skjult sektion til WVC-snifferen */
+        #wvc-sniffer { display: none; }
     </style>
 </head>
 <body>
 
-    <h1 id="main-title">Radiostationer</h1>
-    <p class="status-header">Vælg en kilde for direkte stream</p>
+    <h1 id="display-title">Vælg Station</h1>
 
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="return playOriginal(event, this.href, 'Nova')" class="btn nova">
-            <span>Nova</span> <span>✨</span>
-        </a>
-
-        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="return playOriginal(event, this.href, 'Radio 100')" class="btn radio100">
-            <span>Radio 100</span> <span>💯</span>
-        </a>
-
-        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="return playOriginal(event, this.href, 'The Voice')" class="btn the-voice">
-            <span>The Voice</span> <span>💬</span>
-        </a>
-
-        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="return playOriginal(event, this.href, 'Soft')" class="btn soft">
-            <span>Soft</span> <span>☁️</span>
-        </a>
-
-        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="return playOriginal(event, this.href, 'PopFM')" class="btn popfm">
-            <span>PopFM</span> <span>🎤</span>
-        </a>
-    </div>
-
-    <h2 style="font-size: 12px; color: #444; margin: 30px 0 10px 0; text-transform: uppercase;">Specials</h2>
-    <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="return playOriginal(event, this.href, 'Pop Mix')" class="btn pop-mix">
-            <span>Pop Mix</span> <span>🕺</span>
-        </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="return playOriginal(event, this.href, 'Top 100')" class="btn top-100">
-            <span>Top 100</span> <span>🏆</span>
-        </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="return playOriginal(event, this.href, 'Soft Modern')" class="btn soft-modern">
-            <span>Soft Modern</span> <span>🌿</span>
-        </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="return playOriginal(event, this.href, 'Soft Classic')" class="btn soft-classic">
-            <span>Soft Classic</span> <span>🎻</span>
-        </a>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac', 'The Voice')" class="btn the-voice">The Voice 💬</button>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', 'Nova')" class="btn nova">Nova ✨</button>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', 'Radio 100')" class="btn radio100">Radio 100 💯</button>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/soft-premium_96.aac', 'Soft')" class="btn soft">Soft ☁️</button>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac', 'PopFM')" class="btn popfm">PopFM 🎤</button>
+        
+        <h2 style="font-size: 14px; color: #666; margin-top: 20px;">Specials</h2>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac', 'Pop Mix')" class="btn special">Pop Mix 🕺</button>
+        <button onclick="castOriginal('https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac', 'Top 100')" class="btn special">Top 100 🏆</button>
     </div>
 
     <div class="footer-player">
-        <div id="current-label">Klar til afspilning</div>
-        <audio id="audio-player" controls playsinline crossorigin="anonymous"></audio>
+        <div id="station-name">Vælg en kilde</div>
+        <video id="main-video-element" controls playsinline title="Radio Stream"></video>
+    </div>
+
+    <div id="wvc-sniffer">
+        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac">The Voice</a>
+        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac">Nova</a>
+        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac">Radio 100</a>
+        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac">Soft</a>
+        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac">PopFM</a>
+        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac">Pop Mix</a>
+        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac">Top 100</a>
     </div>
 
     <script>
-        const audio = document.getElementById('audio-player');
-        const mainTitle = document.getElementById('main-title');
-        const footerLabel = document.getElementById('current-label');
+        const video = document.getElementById('main-video-element');
+        const title = document.getElementById('display-title');
+        const label = document.getElementById('station-name');
 
-        function playOriginal(e, url, name) {
-            e.preventDefault();
-
+        function castOriginal(url, name) {
             // 1. Opdater UI
-            mainTitle.textContent = name;
-            footerLabel.textContent = "Original kilde: " + name;
-            document.title = "Spiller: " + name;
+            title.textContent = name;
+            label.textContent = "Original kilde: " + name;
+            document.title = name;
 
-            // 2. Indlæs original kilde direkte
-            audio.src = url;
-            audio.title = name; // Vigtigt for metadata
-            audio.load();
-            audio.play();
+            // 2. Sæt original URL direkte (Dette er nøglen!)
+            // Ved at sætte den direkte på elementet, opfatter WVC linket som kilden.
+            video.src = url;
+            video.title = name;
+            
+            // 3. Tving indlæsning
+            video.load();
+            video.play();
 
-            // 3. FIX FOR COMPUTER BROWSER (Media Session API)
-            // Dette fortæller browseren (Chrome/Edge/Safari), at det er den originale station
+            // 4. Send metadata til browserens OS (Media Session)
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: name,
-                    artist: 'Bauer Media Group',
-                    album: 'Live Stream',
-                    artwork: [
-                        { src: 'https://via.placeholder.com/512x512/f39c12/ffffff?text=' + name, sizes: '512x512', type: 'image/png' }
-                    ]
+                    artist: 'Bauer Media',
+                    album: 'Live Stream'
                 });
             }
-
-            return false;
         }
     </script>
 
