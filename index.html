@@ -204,7 +204,7 @@
         .play-btn:active { transform: scale(0.9); }
         .play-btn svg { fill: black; width: 24px; }
 
-        #media-engine-container { display: none; }
+        #audio-engine { display: none; }
     </style>
 </head>
 <body>
@@ -237,7 +237,7 @@
     </div>
 </div>
 
-<div id="media-engine-container"></div>
+<video id="audio-engine" playsinline webkit-playsinline x-webkit-airplay="allow" preload="auto"></video>
 
 <script>
     const stations = [
@@ -265,17 +265,7 @@
         { id: 'scla', name: 'Soft Classic', cat: 'Mix', icon: '🎼', url: 'https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac', class: 'soft' }
     ];
 
-    // DETEKTION AF WEB VIDEO CASTER
-    const isWebVideoCaster = /WebVideoCaster/i.test(navigator.userAgent);
-    const engineContainer = document.getElementById('media-engine-container');
-    
-    // Opret enten video eller audio tag baseret på miljø
-    const engine = document.createElement(isWebVideoCaster ? 'video' : 'audio');
-    engine.id = 'audio-engine';
-    engine.setAttribute('playsinline', '');
-    engine.setAttribute('x-webkit-airplay', 'allow');
-    engineContainer.appendChild(engine);
-
+    const engine = document.getElementById('audio-engine');
     const ctrlIcon = document.getElementById('ctrl-icon');
     const nameLabel = document.getElementById('current-name');
     const statusLabel = document.getElementById('current-label');
@@ -292,9 +282,26 @@
     engine.volume = savedVol;
     volSlider.value = savedVol;
 
+    // MediaSession setup
+    function updateMediaMetadata(name) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: name,
+                artist: 'Radio Danmark Pro',
+                album: 'Live Radio',
+                artwork: [{ 
+                    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', 
+                    sizes: '512x512', 
+                    type: 'image/png' 
+                }]
+            });
+        }
+    }
+
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', () => engine.play());
         navigator.mediaSession.setActionHandler('pause', () => engine.pause());
+        navigator.mediaSession.setActionHandler('stop', () => { engine.pause(); engine.src = ""; });
     }
 
     function render(filter = '') {
@@ -353,7 +360,7 @@
         el.classList.add('loading');
         
         nameLabel.firstChild.textContent = name + " ";
-        statusLabel.textContent = isWebVideoCaster ? "Klargør Video Cast..." : "Opretter forbindelse...";
+        statusLabel.textContent = "Opretter forbindelse...";
         document.title = "⌛ " + name;
 
         if (url.includes('m3u8')) {
@@ -367,22 +374,19 @@
             engine.src = url;
         }
 
-        engine.play().catch(() => { 
-            statusLabel.textContent = "Tryk Play for at starte"; 
+        engine.play().then(() => {
+            updateMediaMetadata(name);
+        }).catch(() => { 
+            statusLabel.textContent = "Klik på Play for at starte"; 
             el.classList.remove('loading'); 
         });
-
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: name,
-                artist: 'Radio Danmark Pro',
-                artwork: [{ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', sizes: '512x512', type: 'image/png' }]
-            });
-        }
     }
 
     function togglePlay() { 
-        if (!engine.src && !hls.url) return;
+        if (!engine.src && !hls.url) {
+            statusLabel.textContent = "Vælg en station først";
+            return;
+        }
         engine.paused ? engine.play() : engine.pause(); 
     }
 
@@ -409,6 +413,7 @@
         viz.classList.add('active');
         updateIcon(true);
         document.title = "▶ " + activeStationName;
+        updateMediaMetadata(activeStationName);
     };
 
     engine.onpause = () => {
@@ -419,6 +424,7 @@
 
     engine.onerror = () => {
         statusLabel.textContent = "Stream fejl - prøv igen";
+        document.title = "Radio Danmark Pro";
         document.querySelectorAll('.btn').forEach(b => b.classList.remove('loading', 'playing'));
     };
 
@@ -429,6 +435,7 @@
     }
 
     document.getElementById('searchInput').oninput = (e) => render(e.target.value);
+    
     window.onunload = () => hls.destroy();
 
     render();
