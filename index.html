@@ -14,10 +14,9 @@
             align-items: center; 
             padding: 20px; 
             margin: 0;
-            padding-bottom: 160px; /* God plads til afspilleren */
+            padding-bottom: 160px;
         }
         
-        /* Denne overskrift ændrer vi med JavaScript */
         #main-title { 
             margin-bottom: 5px; 
             color: #f39c12; 
@@ -48,14 +47,14 @@
             font-size: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             transition: transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
             border: none;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .btn:active { transform: scale(0.97); filter: brightness(1.2); }
 
-        /* Farveprofiler */
+        /* Farver */
         .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
         .the-voice { background: #ffffff; color: #000; }
@@ -66,7 +65,7 @@
         .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
         .soft-classic { background: linear-gradient(135deg, #5b7d87, #354a50); }
 
-        /* Bund-afspiller sektion */
+        /* Bund-afspiller */
         .footer-player {
             position: fixed;
             bottom: 0;
@@ -90,96 +89,89 @@
             letter-spacing: 1px;
         }
 
-        /* Video tag for bedst mulige WVC detection */
-        video {
+        audio {
             width: 90%;
             max-width: 400px;
-            height: 54px;
-            background: #000;
-            border-radius: 12px;
         }
     </style>
 </head>
 <body>
 
-    <h1 id="main-title">Vælg Radio</h1>
-    <p class="status-header">Tryk for at starte stream</p>
+    <h1 id="main-title">Radiostationer</h1>
+    <p class="status-header">Vælg en kilde for direkte stream</p>
 
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="return startRadio(event, this.href, 'Nova')" class="btn nova">
+        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="return playOriginal(event, this.href, 'Nova')" class="btn nova">
             <span>Nova</span> <span>✨</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="return startRadio(event, this.href, 'Radio 100')" class="btn radio100">
+        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="return playOriginal(event, this.href, 'Radio 100')" class="btn radio100">
             <span>Radio 100</span> <span>💯</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="return startRadio(event, this.href, 'The Voice')" class="btn the-voice">
+        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="return playOriginal(event, this.href, 'The Voice')" class="btn the-voice">
             <span>The Voice</span> <span>💬</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="return startRadio(event, this.href, 'Soft')" class="btn soft">
+        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="return playOriginal(event, this.href, 'Soft')" class="btn soft">
             <span>Soft</span> <span>☁️</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="return startRadio(event, this.href, 'PopFM')" class="btn popfm">
+        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="return playOriginal(event, this.href, 'PopFM')" class="btn popfm">
             <span>PopFM</span> <span>🎤</span>
         </a>
     </div>
 
-    <h2 style="font-size: 12px; color: #444; margin: 30px 0 10px 0; text-transform: uppercase;">Special kanaler</h2>
+    <h2 style="font-size: 12px; color: #444; margin: 30px 0 10px 0; text-transform: uppercase;">Specials</h2>
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="return startRadio(event, this.href, 'Pop Mix')" class="btn pop-mix">
+        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="return playOriginal(event, this.href, 'Pop Mix')" class="btn pop-mix">
             <span>Pop Mix</span> <span>🕺</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="return startRadio(event, this.href, 'Top 100')" class="btn top-100">
+        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="return playOriginal(event, this.href, 'Top 100')" class="btn top-100">
             <span>Top 100</span> <span>🏆</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="return startRadio(event, this.href, 'Soft Modern')" class="btn soft-modern">
+        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="return playOriginal(event, this.href, 'Soft Modern')" class="btn soft-modern">
             <span>Soft Modern</span> <span>🌿</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="return startRadio(event, this.href, 'Soft Classic')" class="btn soft-classic">
+        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="return playOriginal(event, this.href, 'Soft Classic')" class="btn soft-classic">
             <span>Soft Classic</span> <span>🎻</span>
         </a>
     </div>
 
     <div class="footer-player">
-        <div id="current-label">Ingen station valgt</div>
-        <video id="player" controls playsinline></video>
+        <div id="current-label">Klar til afspilning</div>
+        <audio id="audio-player" controls playsinline crossorigin="anonymous"></audio>
     </div>
 
     <script>
-        const player = document.getElementById('player');
+        const audio = document.getElementById('audio-player');
         const mainTitle = document.getElementById('main-title');
         const footerLabel = document.getElementById('current-label');
 
-        function startRadio(e, url, name) {
-            // Forhindrer ny fane/side
+        function playOriginal(e, url, name) {
             e.preventDefault();
 
-            // 1. Opdater navnet øverst på siden
+            // 1. Opdater UI
             mainTitle.textContent = name;
-            
-            // 2. Opdater navnet i afspilleren i bunden
-            footerLabel.textContent = "Spiller nu: " + name;
+            footerLabel.textContent = "Original kilde: " + name;
+            document.title = "Spiller: " + name;
 
-            // 3. Opdater selve browserens fane-titel
-            document.title = "▶ " + name;
+            // 2. Indlæs original kilde direkte
+            audio.src = url;
+            audio.title = name; // Vigtigt for metadata
+            audio.load();
+            audio.play();
 
-            // 4. Konfigurer stream til Web Video Caster
-            player.src = url;
-            player.type = "audio/aac";
-            player.title = name; // Vigtigt metadata for WVC
-            
-            player.load();
-            player.play().catch(err => console.log("Play blocked by browser"));
-
-            // Media Session gør at navnet også står på telefonens låseskærm
+            // 3. FIX FOR COMPUTER BROWSER (Media Session API)
+            // Dette fortæller browseren (Chrome/Edge/Safari), at det er den originale station
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: name,
-                    artist: 'Radio Stream',
-                    album: 'Live'
+                    artist: 'Bauer Media Group',
+                    album: 'Live Stream',
+                    artwork: [
+                        { src: 'https://via.placeholder.com/512x512/f39c12/ffffff?text=' + name, sizes: '512x512', type: 'image/png' }
+                    ]
                 });
             }
 
