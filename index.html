@@ -2,8 +2,8 @@
 <html lang="da">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Player Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Radio Player</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -12,40 +12,33 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            padding: 20px; 
+            padding: 10px 20px; 
             margin: 0;
-            padding-bottom: 180px; 
+            /* Sikrer masser af plads i bunden så knapperne ikke dækkes */
+            padding-bottom: 220px; 
         }
-        
-        #main-title { 
-            margin-bottom: 5px; 
-            color: #f39c12; 
-            font-size: 28px; 
-            font-weight: 800; 
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .status-header { color: #888; font-size: 14px; margin-bottom: 25px; }
         
         .section-title {
             width: 100%;
             max-width: 400px;
-            font-size: 12px;
-            color: #666;
-            margin: 25px 0 10px 5px;
+            font-size: 13px;
+            color: #888;
+            margin: 25px 0 12px 5px;
             text-transform: uppercase;
-            font-weight: bold;
+            font-weight: 800;
             letter-spacing: 1.5px;
-            border-left: 3px solid #f39c12;
-            padding-left: 10px;
+            border-left: 4px solid #f39c12;
+            padding-left: 12px;
+        }
+
+        .section-title:first-of-type {
+            margin-top: 20px;
         }
 
         .grid { 
             display: grid; 
             grid-template-columns: 1fr; 
-            gap: 10px; 
+            gap: 12px; 
             width: 100%; 
             max-width: 400px; 
         }
@@ -54,26 +47,26 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 15px 20px; 
-            border-radius: 12px; 
+            padding: 18px 22px; 
+            border-radius: 16px; 
             text-decoration: none; 
             color: white; 
             font-weight: 600; 
-            font-size: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 17px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             transition: all 0.2s ease;
             -webkit-tap-highlight-color: transparent;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.05);
             cursor: pointer;
         }
         
         .btn:active { transform: scale(0.96); filter: brightness(1.2); }
 
-        /* Farve-kategorier */
-        .dr { background: linear-gradient(135deg, #cc0000, #880000); } /* DR Rød */
+        /* Farve-profiler */
+        .dr { background: linear-gradient(135deg, #e71414, #9e0a0a); }
         .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .the-voice { background: #eeeeee; color: #000; }
+        .the-voice { background: #ffffff; color: #000; }
         .soft { background: linear-gradient(135deg, #00adef, #005d82); }
         .popfm { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
         .retro-style { background: linear-gradient(135deg, #e67e22, #d35400); }
@@ -81,51 +74,47 @@
         .classic-style { background: linear-gradient(135deg, #5b7d87, #354a50); }
         .gold-style { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #000; }
 
-        /* Footer */
+        /* FORBEDRET FOOTER-PLAYER */
         .footer-player {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: #181818;
-            padding: 20px 0;
+            /* Semi-gennemsigtig baggrund med blur */
+            background: rgba(24, 24, 24, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            
+            padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
             box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
-            border-top: 1px solid #333;
+            border-top: 1px solid rgba(255,255,255,0.1);
             z-index: 9999;
         }
 
         #current-label {
-            font-size: 14px;
-            margin-bottom: 12px;
+            font-size: 15px;
+            margin-bottom: 15px;
             color: #f39c12;
-            font-weight: bold;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        /* Større video/afspiller-bjælke */
         video {
-            width: 90%;
-            max-width: 400px;
-            height: 50px;
+            width: 92%;
+            max-width: 420px;
+            height: 56px; /* Øget højde */
             background: #000;
-            border-radius: 10px;
+            border-radius: 14px;
+            outline: none;
         }
     </style>
 </head>
 <body>
-
-    <h1 id="main-title">Radio DK</h1>
-    <p class="status-header">Vælg en station for at starte</p>
-
-    <div class="section-title">DR Stationer</div>
-    <div class="grid">
-        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p1/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P1')" class="btn dr"><span>DR P1</span> 📰</a>
-        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p2/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P2')" class="btn dr"><span>DR P2</span> 🎻</a>
-        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p3/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P3')" class="btn dr"><span>DR P3</span> ⚡</a>
-        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p4sjaelland/masterab.m3u8" onclick="return startRadio(event, this.href, 'DR P4 Sjælland')" class="btn dr"><span>DR P4 Sjælland</span> 📍</a>
-        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p5/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P5')" class="btn dr"><span>DR P5</span> ☕</a>
-    </div>
 
     <div class="section-title">Populære Stationer</div>
     <div class="grid">
@@ -135,6 +124,16 @@
         <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="return startRadio(event, this.href, 'The Voice')" class="btn the-voice"><span>The Voice</span> 🎤</a>
         <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="return startRadio(event, this.href, 'PopFM')" class="btn popfm"><span>PopFM</span> 🎸</a>
         <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="return startRadio(event, this.href, 'Mix 7')" class="btn mix-style"><span>Mix 7</span> 🕺</a>
+        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p4sjaelland/masterab.m3u8" onclick="return startRadio(event, this.href, 'DR P4')" class="btn dr"><span>DR P4</span> 📍</a>
+    </div>
+
+    <div class="section-title">DR Stationer</div>
+    <div class="grid">
+        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p1/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P1')" class="btn dr"><span>DR P1</span> 📰</a>
+        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p2/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P2')" class="btn dr"><span>DR P2</span> 🎻</a>
+        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p3/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P3')" class="btn dr"><span>DR P3</span> ⚡</a>
+        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p4sjaelland/masterab.m3u8" onclick="return startRadio(event, this.href, 'DR P4')" class="btn dr"><span>DR P4</span> 📍</a>
+        <a href="https://drliveradio2.akamaized.net/hls/live/2118698/p5/playlist-320000.m3u8" onclick="return startRadio(event, this.href, 'DR P5')" class="btn dr"><span>DR P5</span> ☕</a>
     </div>
 
     <div class="section-title">Retro & Hits</div>
@@ -142,11 +141,11 @@
         <a href="https://live-bauerdk.sharp-stream.com/RP01_premium_96.aac" onclick="return startRadio(event, this.href, 'Radio Vinyl')" class="btn classic-style"><span>Radio Vinyl</span> 📻</a>
         <a href="http://stream.vinylhits.dk/vinylmp3" onclick="return startRadio(event, this.href, 'VinylHits')" class="btn classic-style"><span>VinylHits</span> 💿</a>
         <a href="https://streammp3.retro-radio.dk/retro-mp3" onclick="return startRadio(event, this.href, 'Retro Radio')" class="btn retro-style"><span>Retro Radio</span> 📼</a>
-        <a href="http://stream1.partyfm.dk/Party128" onclick="return startRadio(event, this.href, 'PartyFM')" class="btn popfm"><span>PartyFM</span> 🥳</a>
     </div>
 
     <div class="section-title">Mix & Special</div>
     <div class="grid">
+        <a href="http://stream1.partyfm.dk/Party128" onclick="return startRadio(event, this.href, 'PartyFM')" class="btn popfm"><span>PartyFM</span> 🥳</a>
         <a href="https://live-bauerdk.sharp-stream.com/RP27_premium_96.aac" onclick="return startRadio(event, this.href, 'Weekend Mix')" class="btn mix-style"><span>Weekend Mix</span> 🍹</a>
         <a href="https://live-bauerdk.sharp-stream.com/RP16_premium_96.aac" onclick="return startRadio(event, this.href, 'The Voice In The Mix')" class="btn mix-style"><span>Voice In The Mix</span> 🔥</a>
         <a href="https://live-bauerdk.sharp-stream.com/RP17_premium_96.aac" onclick="return startRadio(event, this.href, 'The Voice Throwback')" class="btn the-voice"><span>Voice Throwback</span> ⏪</a>
@@ -163,19 +162,16 @@
 
     <script>
         const player = document.getElementById('player');
-        const mainTitle = document.getElementById('main-title');
         const footerLabel = document.getElementById('current-label');
 
         function startRadio(e, url, name) {
             e.preventDefault();
 
-            mainTitle.textContent = name;
             footerLabel.textContent = "Spiller nu: " + name;
             document.title = "▶ " + name;
 
             player.src = url;
             
-            // Håndter MIME type for HLS (DR) vs AAC/MP3
             if (url.includes("m3u8")) {
                 player.type = "application/x-mpegURL";
             } else {
@@ -184,18 +180,15 @@
             
             player.title = name;
             player.load();
-            player.play().catch(err => console.log("Afspilning blokeret: ", err));
+            player.play().catch(err => console.log("Afspilning kræver interaktion"));
 
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: name,
                     artist: 'Radio Danmark',
-                    album: 'Live Stream'
+                    album: 'Live'
                 });
             }
-
-            // Scroll blidt op til toppen så man kan se titlen på mobilen
-            window.scrollTo({ top: 0, behavior: 'smooth' });
 
             return false;
         }
