@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Radio Pro">
-    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png?_=20201026215747">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png">
     
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJiaW5kZXIiOiAiUmFkaW8gRGFubWFyayBQcm8iLAogICJzaG9ydF9uYW1lIjogIlJhZGlvIFBybyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDgwODA4IiwKICAidGhlbWVfY29sb3IiOiAiIzA4MDgwOCIKfQ==">
 
@@ -169,7 +169,10 @@
 
         .volume-container { display: flex; align-items: center; gap: 12px; }
         .volume-container svg { width: 18px; fill: white; opacity: 0.6; cursor: pointer; transition: 0.2s; }
-        .volume-container svg:hover { opacity: 1; }
+        .volume-container.is-ios .volume-slider { opacity: 0.3; pointer-events: none; }
+        .ios-notice { display: none; font-size: 9px; color: var(--accent); margin-top: 4px; text-align: center; width: 100%; }
+        .is-ios .ios-notice { display: block; }
+
         .volume-slider {
             flex: 1;
             -webkit-appearance: none;
@@ -231,9 +234,10 @@
             <svg id="ctrl-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </button>
     </div>
-    <div class="volume-container">
+    <div class="volume-container" id="vol-cont">
         <svg id="mute-icon" onclick="toggleMute()" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
         <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)" aria-label="Lydstyrke">
+        <div class="ios-notice">Brug knapperne på siden af din iPhone</div>
     </div>
 </div>
 
@@ -272,21 +276,20 @@
     const volSlider = document.getElementById('vol-slider');
     const muteIcon = document.getElementById('mute-icon');
     const viz = document.getElementById('viz');
+    const volCont = document.getElementById('vol-cont');
     
     let hls = new Hls();
     let favorites = JSON.parse(localStorage.getItem('radioFavs')) || [];
     let currentStationId = null;
     let activeStationName = "Radio Danmark Pro";
 
+    // iOS Check
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) volCont.classList.add('is-ios');
+
     const savedVol = localStorage.getItem('radioVol') || 1;
     engine.volume = savedVol;
     volSlider.value = savedVol;
-
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', () => engine.play());
-        navigator.mediaSession.setActionHandler('pause', () => engine.pause());
-        navigator.mediaSession.setActionHandler('stop', () => { engine.pause(); engine.src = ""; });
-    }
 
     function render(filter = '') {
         const list = document.getElementById('station-list');
@@ -338,8 +341,7 @@
     function play(url, name, el) {
         hls.detachMedia();
         hls.destroy();
-        hls = new Hls();
-
+        
         document.querySelectorAll('.btn').forEach(b => b.classList.remove('playing', 'loading'));
         el.classList.add('loading');
         
@@ -347,12 +349,16 @@
         statusLabel.textContent = "Opretter forbindelse...";
         document.title = "⌛ " + name;
 
+        // RETTELSE FOR AIRPLAY: Prioritér Native HLS (Safari) over hls.js
         if (url.includes('m3u8')) {
-            if (Hls.isSupported()) {
+            if (engine.canPlayType('application/vnd.apple.mpegurl')) {
+                // Her bruger vi Safari's egen afspiller - BEDST TIL AIRPLAY
+                engine.src = url;
+            } else if (Hls.isSupported()) {
+                // Chrome/Android fallback
+                hls = new Hls();
                 hls.loadSource(url);
                 hls.attachMedia(engine);
-            } else if (engine.canPlayType('application/vnd.apple.mpegurl')) {
-                engine.src = url;
             }
         } else {
             engine.src = url;
@@ -367,13 +373,13 @@
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: name,
                 artist: 'Radio Danmark Pro',
-                artwork: [{ src: 'https://cdn-icons-png.flaticon.com/512/306/306424.png', sizes: '512x512', type: 'image/png' }]
+                artwork: [{ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', sizes: '512x512', type: 'image/png' }]
             });
         }
     }
 
     function togglePlay() { 
-        if (!engine.src && !hls.url) {
+        if (!engine.src && (!hls || !hls.url)) {
             statusLabel.textContent = "Vælg en station først";
             return;
         }
@@ -381,12 +387,14 @@
     }
 
     function setVolume(val) { 
+        if (isIOS) return; // Forhindrer fejl i konsollen på iOS
         engine.volume = val; 
         localStorage.setItem('radioVol', val);
         updateMuteIcon(val == 0);
     }
 
     function toggleMute() {
+        if (isIOS) return;
         engine.muted = !engine.muted;
         updateMuteIcon(engine.muted);
     }
@@ -413,7 +421,6 @@
 
     engine.onerror = () => {
         statusLabel.textContent = "Stream fejl - prøv igen";
-        document.title = "Radio Danmark Pro";
         document.querySelectorAll('.btn').forEach(b => b.classList.remove('loading', 'playing'));
     };
 
@@ -425,7 +432,7 @@
 
     document.getElementById('searchInput').oninput = (e) => render(e.target.value);
     
-    window.onunload = () => hls.destroy();
+    window.onunload = () => { if(hls) hls.destroy(); };
 
     render();
 </script>
