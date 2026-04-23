@@ -12,6 +12,7 @@
     
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJiaW5kZXIiOiAiUmFkaW8gRGFubWFyayBQcm8iLAogICJzaG9ydF9uYW1lIjogIlJhZGlvIFBybyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDgwODA4IiwKICAidGhlbWVfY29sb3IiOiAiIzA4MDgwOCIKfQ==">
 
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -91,7 +92,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             min-height: 85px;
             -webkit-tap-highlight-color: transparent;
@@ -104,10 +105,14 @@
             font-size: 14px;
             color: var(--text-dim);
             opacity: 0.2;
+            transition: 0.3s;
             padding: 4px;
             z-index: 10;
         }
         .btn.is-fav .fav-heart { opacity: 1; color: var(--accent); }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .btn.loading { animation: pulse 1s infinite; border-color: white; }
 
         .btn .icon { font-size: 22px; margin-bottom: 4px; }
         .btn span { font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; padding: 0 4px; }
@@ -116,8 +121,10 @@
             background: rgba(var(--brand-color), 0.2);
             border-color: rgba(var(--brand-color), 0.5);
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
+        /* BRAND FARVER */
         .nova { --brand-color: 46, 204, 113; }
         .r100 { --brand-color: 52, 152, 219; }
         .soft { --brand-color: 41, 128, 185; }
@@ -129,6 +136,7 @@
         .retro { --brand-color: 211, 84, 0; }
         .party { --brand-color: 241, 196, 15; }
 
+        /* FOOTER PLAYER */
         .footer-player {
             position: fixed;
             bottom: 30px;
@@ -146,118 +154,64 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        .player-main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; gap: 10px; }
-        .info-stack { flex: 1; overflow: hidden; min-width: 0; }
+        .player-main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .info-stack { flex: 1; overflow: hidden; padding-right: 10px; }
         #current-label { font-size: 9px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 1px; }
-        #current-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        #current-name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
 
-        .visualizer { display: flex; align-items: flex-end; gap: 2px; height: 15px; opacity: 0; }
+        .visualizer { display: flex; align-items: flex-end; gap: 2px; height: 15px; opacity: 0; transition: 0.3s; }
         .visualizer.active { opacity: 1; }
         .v-bar { width: 3px; background: white; border-radius: 1px; height: 3px; }
         .active .v-bar { animation: bar-bounce 0.8s infinite alternate; }
+        .active .v-bar:nth-child(2) { animation-delay: 0.2s; }
+        .active .v-bar:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bar-bounce { 0% { height: 3px; } 100% { height: 15px; } }
 
         .volume-container { display: flex; align-items: center; gap: 12px; }
-        .volume-slider { flex: 1; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; outline: none; }
-        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: white; border-radius: 50%; }
-
-        .play-btn { width: 54px; height: 54px; border-radius: 50%; background: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-        .play-btn svg { fill: black; width: 24px; }
-
-        .airplay-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
+        .volume-container svg { width: 18px; fill: white; opacity: 0.6; cursor: pointer; transition: 0.2s; }
+        .volume-container svg:hover { opacity: 1; }
+        .volume-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .play-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: white;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
             flex-shrink: 0;
-            padding: 0;
-            transition: all 0.2s;
+            transition: transform 0.2s;
         }
-        .airplay-btn.casting { background: var(--accent); border-color: var(--accent); }
-        .airplay-btn svg { width: 20px; fill: white; }
-        .airplay-btn:active { transform: scale(0.92); }
+        .play-btn:active { transform: scale(0.9); }
+        .play-btn svg { fill: black; width: 24px; }
 
-        .help-btn {
-            position: fixed;
-            top: 25px;
-            right: 20px;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            z-index: 200;
-            font-family: inherit;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .modal-backdrop.show { display: flex; }
-        .modal {
-            background: #1a1a1a;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 25px;
-            max-width: 400px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal h2 { margin-top: 0; font-size: 18px; }
-        .modal h3 { font-size: 13px; color: var(--accent); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .modal p, .modal li { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.85); }
-        .modal ol { padding-left: 20px; }
-        .modal-close {
-            width: 100%;
-            padding: 12px;
-            background: white;
-            color: black;
-            border: none;
-            border-radius: 14px;
-            font-family: inherit;
-            font-weight: 700;
-            margin-top: 15px;
-            cursor: pointer;
-        }
-
-        /* KRITISK: Audio-element MÅ IKKE være display:none - iOS deaktiverer så AirPlay */
-        #audio-engine { 
-            position: fixed;
-            bottom: -100px;
-            left: 0;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-        }
+        #audio-engine { display: none; }
     </style>
 </head>
 <body>
 
-<button class="help-btn" onclick="document.getElementById('helpModal').classList.add('show')">?</button>
-
 <div class="container">
     <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="Søg efter stationer...">
+        <input type="text" class="search-input" id="searchInput" placeholder="Søg efter stationer..." aria-label="Søg radiostation">
     </div>
     <div id="station-list"></div>
 </div>
@@ -273,53 +227,20 @@
                 </div>
             </div>
         </div>
-        <button class="airplay-btn" id="airplay-btn" onclick="showAirplayPicker()" title="AirPlay">
-            <svg viewBox="0 0 24 24"><path d="M6 22h12l-6-6zM21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v-2H3V5h18v12h-4v2h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
-        </button>
-        <button class="play-btn" onclick="togglePlay()">
+        <button class="play-btn" onclick="togglePlay()" aria-label="Afspil eller pause">
             <svg id="ctrl-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </button>
     </div>
     <div class="volume-container">
-        <svg style="width:18px; fill:white; opacity:0.6;" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
-        <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
+        <svg id="mute-icon" onclick="toggleMute()" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+        <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)" aria-label="Lydstyrke">
     </div>
 </div>
 
-<!-- Native audio element - ingen hls.js. Audio-only AirPlay kræver dette. -->
-<audio id="audio-engine" preload="metadata" x-webkit-airplay="allow" airplay="allow" playsinline webkit-playsinline></audio>
-
-<div class="modal-backdrop" id="helpModal">
-    <div class="modal">
-        <h2>🎧 AirPlay til Apple TV</h2>
-        
-        <h3>Sådan får du LYD (ikke video)</h3>
-        <ol>
-            <li>Start en station i appen</li>
-            <li>Tryk på <strong>AirPlay-knappen</strong> i afspilleren nedenfor (ved siden af play)</li>
-            <li>Vælg dit Apple TV</li>
-        </ol>
-        
-        <h3>Alternativ: Kontrolcenter</h3>
-        <ol>
-            <li>Start stationen</li>
-            <li>Åbn Kontrolcenter</li>
-            <li>Tryk på <strong>musik-widgeten</strong> øverst til højre</li>
-            <li>Tryk på AirPlay-ikonet <em>inde i musik-widgeten</em></li>
-            <li>Vælg Apple TV</li>
-        </ol>
-        
-        <h3>⚠️ Brug IKKE skærmspejling</h3>
-        <p>"Screen Mirroring" fra Kontrolcenter sender Safari-fanen som video. Brug altid AirPlay fra musik-widgeten eller fra selve appen.</p>
-        
-        <h3>💡 Tip: Installer som app</h3>
-        <p>Del → "Føj til hjemmeskærm". Så kører radioen som en rigtig app og håndterer AirPlay bedre.</p>
-        
-        <button class="modal-close" onclick="document.getElementById('helpModal').classList.remove('show')">Forstået</button>
-    </div>
-</div>
+<video id="audio-engine" playsinline x-webkit-airplay="allow"></video>
 
 <script>
+    // RETTEDE URL'ER TIL PARTY FM OG RETRO RADIO
     const stations = [
         { id: 'nova', name: 'Nova', cat: 'Populære', icon: '✨', url: 'https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', class: 'nova' },
         { id: 'r100', name: 'Radio 100', cat: 'Populære', icon: '💯', url: 'https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', class: 'r100' },
@@ -335,7 +256,7 @@
         { id: 'vinyl', name: 'Radio Vinyl', cat: 'Retro', icon: '📻', url: 'https://live-bauerdk.sharp-stream.com/RP01_premium_96.aac', class: 'vinyl' },
         { id: 'vhits', name: 'VinylHits', cat: 'Retro', icon: '💿', url: 'https://stream.vinylhits.dk/vinylmp3', class: 'vinyl' },
         { id: 'retro', name: 'Retro', cat: 'Retro', icon: '🎙️', url: 'https://stream.retro-radio.dk/retro-mp3', class: 'retro' },
-        { id: 'party', name: 'PartyFM', cat: 'Mix', icon: '🥳', url: 'https://stream.partyfm.dk/party128', class: 'party' },
+        { id: 'party', name: 'PartyFM', cat: 'Mix', icon: '🥳', url: 'https://stream.partyfm.dk/partyfm128', class: 'party' },
         { id: 'wmix', name: 'Weekend Mix', cat: 'Mix', icon: '🍹', url: 'https://live-bauerdk.sharp-stream.com/RP27_premium_96.aac', class: 'mix' },
         { id: 'vix', name: 'The Voice Mix', cat: 'Mix', icon: '🎧', url: 'https://live-bauerdk.sharp-stream.com/RP16_premium_96.aac', class: 'voice' },
         { id: 'vtb', name: 'The Voice Throwback', cat: 'Mix', icon: '⏪', url: 'https://live-bauerdk.sharp-stream.com/RP17_premium_96.aac', class: 'voice' },
@@ -349,39 +270,37 @@
     const ctrlIcon = document.getElementById('ctrl-icon');
     const nameLabel = document.getElementById('current-name');
     const statusLabel = document.getElementById('current-label');
+    const volSlider = document.getElementById('vol-slider');
+    const muteIcon = document.getElementById('mute-icon');
     const viz = document.getElementById('viz');
-    const airplayBtn = document.getElementById('airplay-btn');
     
+    let hls = new Hls();
     let favorites = JSON.parse(localStorage.getItem('radioFavs')) || [];
     let currentStationId = null;
-    let activeStationName = "";
-    const albumArt = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png';
+    let activeStationName = "Radio Danmark Pro";
 
-    function updateMetadata(name) {
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: name,
-                artist: 'Radio Danmark Pro',
-                album: 'Live Radio',
-                artwork: [
-                    { src: albumArt, sizes: '96x96', type: 'image/png' },
-                    { src: albumArt, sizes: '192x192', type: 'image/png' },
-                    { src: albumArt, sizes: '512x512', type: 'image/png' }
-                ]
-            });
-        }
+    const savedVol = localStorage.getItem('radioVol') || 1;
+    engine.volume = savedVol;
+    volSlider.value = savedVol;
+
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', () => engine.play());
+        navigator.mediaSession.setActionHandler('pause', () => engine.pause());
+        navigator.mediaSession.setActionHandler('stop', () => { engine.pause(); engine.src = ""; });
     }
 
     function render(filter = '') {
         const list = document.getElementById('station-list');
         list.innerHTML = '';
         const filtered = stations.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+        
         const favStations = filtered.filter(s => favorites.includes(s.id));
-        if (favStations.length > 0) renderSection(list, "⭐ Favoritter", favStations, true);
+        if (favStations.length > 0) { renderSection(list, "⭐ Dine Favoritter", favStations, true); }
+
         const categories = [...new Set(stations.map(s => s.cat))];
         categories.forEach(cat => {
             const catStations = filtered.filter(s => s.cat === cat);
-            if (catStations.length > 0) renderSection(list, cat, catStations, false);
+            if (catStations.length > 0) { renderSection(list, cat, catStations, false); }
         });
     }
 
@@ -391,15 +310,11 @@
         const grid = document.createElement('div');
         grid.className = 'grid';
         stationGroup.forEach(s => {
+            const isFav = favorites.includes(s.id);
+            const isPlaying = currentStationId === s.id;
             const btn = document.createElement('div');
-            btn.className = `btn ${s.class} ${favorites.includes(s.id) ? 'is-fav' : ''} ${currentStationId === s.id ? 'playing' : ''}`;
-            btn.onclick = (e) => {
-                if (e.target.classList.contains('fav-heart')) return;
-                currentStationId = s.id;
-                activeStationName = s.name;
-                play(s.url, s.name);
-                render(document.getElementById('searchInput').value);
-            };
+            btn.className = `btn ${s.class} ${isFav ? 'is-fav' : ''} ${isPlaying ? 'playing' : ''}`;
+            btn.setAttribute('onclick', `handleBtnClick(event, '${s.url}', '${s.name}', this, '${s.id}')`);
             btn.innerHTML = `<div class="fav-heart" onclick="toggleFav(event, '${s.id}')">❤</div><span class="icon">${s.icon}</span><span>${s.name}</span>`;
             grid.appendChild(btn);
         });
@@ -407,87 +322,12 @@
         parent.appendChild(section);
     }
 
-    // KERNEÆNDRING: KUN native HLS - INGEN hls.js
-    // hls.js bruger MediaSource Extensions som iOS ikke kan route som audio-only AirPlay
-    function play(url, name) {
-        statusLabel.textContent = "Forbinder...";
-        nameLabel.firstChild.textContent = name + " ";
-        
-        engine.pause();
-        engine.removeAttribute('src');
-        engine.load();
-        
-        engine.src = url;
-        engine.load();
-        
-        updateMetadata(name);
-        
-        setTimeout(() => {
-            const playPromise = engine.play();
-            if (playPromise) {
-                playPromise.catch(err => {
-                    console.log('Play error:', err);
-                    statusLabel.textContent = "Tryk på play";
-                });
-            }
-        }, 100);
+    function handleBtnClick(e, url, name, el, id) {
+        if (e.target.classList.contains('fav-heart')) return;
+        currentStationId = id;
+        activeStationName = name;
+        play(url, name, el);
     }
-
-    function togglePlay() { 
-        if (!engine.src) return;
-        engine.paused ? engine.play() : engine.pause(); 
-    }
-
-    function setVolume(val) { engine.volume = val; localStorage.setItem('radioVol', val); }
-
-    function showAirplayPicker() {
-        if (typeof engine.webkitShowPlaybackTargetPicker === 'function') {
-            try {
-                engine.webkitShowPlaybackTargetPicker();
-            } catch (e) {
-                alert('AirPlay kræver Safari på iOS/iPadOS/macOS.');
-            }
-        } else {
-            alert('Denne browser understøtter ikke AirPlay direkte.\n\nBrug: Kontrolcenter → musik-widget → AirPlay-ikon (IKKE skærmspejling).');
-        }
-    }
-
-    if (window.WebKitPlaybackTargetAvailabilityEvent) {
-        engine.addEventListener('webkitplaybacktargetavailabilitychanged', (event) => {
-            airplayBtn.style.opacity = (event.availability === 'available') ? '1' : '0.5';
-        });
-    }
-
-    engine.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', () => {
-        if (engine.webkitCurrentPlaybackTargetIsWireless) {
-            statusLabel.textContent = "Spiller på AirPlay 📡";
-            airplayBtn.classList.add('casting');
-        } else {
-            airplayBtn.classList.remove('casting');
-            if (!engine.paused) statusLabel.textContent = "Spiller nu";
-        }
-    });
-
-    engine.onplaying = () => {
-        statusLabel.textContent = engine.webkitCurrentPlaybackTargetIsWireless ? "Spiller på AirPlay 📡" : "Spiller nu";
-        viz.classList.add('active');
-        ctrlIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = "playing";
-            updateMetadata(activeStationName);
-        }
-    };
-
-    engine.onpause = () => {
-        viz.classList.remove('active');
-        ctrlIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
-    };
-
-    engine.onerror = (e) => {
-        console.log('Audio error:', e);
-        statusLabel.textContent = "Fejl - prøv igen";
-    };
 
     function toggleFav(e, id) {
         e.stopPropagation();
@@ -496,25 +336,108 @@
         render(document.getElementById('searchInput').value);
     }
 
+    function play(url, name, el) {
+        // Nulstil engine og HLS ordentligt hver gang
+        hls.detachMedia();
+        hls.destroy();
+        hls = new Hls();
+        engine.src = ""; 
+
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('playing', 'loading'));
+        if (el) el.classList.add('loading');
+        
+        nameLabel.firstChild.textContent = name + " ";
+        statusLabel.textContent = "Opretter forbindelse...";
+        
+        document.title = name;
+
+        if (url.includes('m3u8')) {
+            if (Hls.isSupported()) {
+                hls.loadSource(url);
+                hls.attachMedia(engine);
+            } else if (engine.canPlayType('application/vnd.apple.mpegurl')) {
+                engine.src = url;
+            }
+        } else {
+            engine.src = url;
+        }
+
+        engine.play().catch(() => { 
+            statusLabel.textContent = "Klik på Play for at starte"; 
+            if (el) el.classList.remove('loading'); 
+        });
+
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: name,
+                artist: 'Radio Danmark Pro',
+                artwork: [{ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png', sizes: '512x512', type: 'image/png' }]
+            });
+        }
+    }
+
+    function togglePlay() { 
+        if (!engine.src && !hls.url) {
+            statusLabel.textContent = "Vælg en station først";
+            return;
+        }
+        engine.paused ? engine.play() : engine.pause(); 
+    }
+
+    function setVolume(val) { 
+        engine.volume = val; 
+        localStorage.setItem('radioVol', val);
+        updateMuteIcon(val == 0);
+    }
+
+    function toggleMute() {
+        engine.muted = !engine.muted;
+        updateMuteIcon(engine.muted);
+    }
+
+    function updateMuteIcon(isMuted) {
+        muteIcon.style.fill = isMuted ? '#ff4757' : 'white';
+        muteIcon.style.opacity = isMuted ? '1' : '0.6';
+    }
+
+    engine.onplaying = () => {
+        const loadingBtn = document.querySelector('.btn.loading');
+        if (loadingBtn) loadingBtn.classList.replace('loading', 'playing');
+        
+        // Sørg for at den korrekte station markeres som playing (især vigtigt ved fav-re-render)
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('playing'));
+        const activeBtn = Array.from(document.querySelectorAll('.btn')).find(b => b.textContent.includes(activeStationName));
+        if (activeBtn) activeBtn.classList.add('playing');
+
+        statusLabel.textContent = "Spiller nu";
+        viz.classList.add('active');
+        updateIcon(true);
+        document.title = "▶ " + activeStationName;
+    };
+
+    engine.onpause = () => {
+        viz.classList.remove('active');
+        updateIcon(false);
+        document.title = "Radio Danmark Pro";
+    };
+
+    engine.onerror = () => {
+        statusLabel.textContent = "Stream fejl - prøv igen";
+        document.title = "Radio Danmark Pro";
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('loading', 'playing'));
+    };
+
+    function updateIcon(playing) {
+        ctrlIcon.innerHTML = playing 
+            ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' 
+            : '<path d="M8 5v14l11-7z"/>';
+    }
+
     document.getElementById('searchInput').oninput = (e) => render(e.target.value);
     
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', () => engine.play());
-        navigator.mediaSession.setActionHandler('pause', () => engine.pause());
-        navigator.mediaSession.setActionHandler('stop', () => engine.pause());
-    }
+    window.onunload = () => hls.destroy();
 
-    const savedVol = localStorage.getItem('radioVol') || 1;
-    engine.volume = savedVol;
-    document.getElementById('vol-slider').value = savedVol;
     render();
-
-    if (!localStorage.getItem('seenHelp')) {
-        setTimeout(() => {
-            document.getElementById('helpModal').classList.add('show');
-            localStorage.setItem('seenHelp', '1');
-        }, 500);
-    }
 </script>
 
 </body>
