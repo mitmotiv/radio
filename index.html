@@ -17,9 +17,7 @@
         }
         
         h1 { margin-bottom: 5px; color: #f39c12; font-size: 28px; font-weight: 800; }
-        .status-text { color: #aaa; font-size: 14px; margin-bottom: 25px; text-align: center; }
-        
-        h2 { width: 100%; max-width: 400px; font-size: 14px; color: #aaa; margin: 25px 0 10px 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .status-text { color: #aaa; font-size: 14px; margin-bottom: 25px; }
         
         .grid { 
             display: grid; 
@@ -29,7 +27,6 @@
             max-width: 400px; 
         }
         
-        /* Knapperne er links med target="hidden_frame" */
         .btn { 
             display: flex;
             align-items: center;
@@ -43,12 +40,11 @@
             font-size: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             transition: transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
         }
         
         .btn:active { transform: scale(0.96); filter: brightness(1.2); }
 
-        /* Farveprofiler */
         .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
         .the-voice { background: #ffffff; color: #000; }
@@ -59,58 +55,75 @@
         .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
         .soft-classic { background: linear-gradient(135deg, #5b7d87, #354a50); }
 
-        /* Skjult iframe */
-        #hidden_frame { display: none; }
+        /* Skjul den rigtige afspiller helt */
+        #hidden-player { display: none; }
     </style>
 </head>
 <body>
 
     <h1>Radio Cast</h1>
-    <p class="status-text">Tryk på en station for at caste</p>
+    <p id="info" class="status-text">Vælg station for at caste</p>
 
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" target="hidden_frame" class="btn nova">
+        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="handleCast(event, this.href, 'Nova')" class="btn nova">
             <span>Nova</span> <span>✨</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" target="hidden_frame" class="btn radio100">
+        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="handleCast(event, this.href, 'Radio 100')" class="btn radio100">
             <span>Radio 100</span> <span>💯</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" target="hidden_frame" class="btn the-voice">
+        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="handleCast(event, this.href, 'The Voice')" class="btn the-voice">
             <span>The Voice</span> <span>💬</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" target="hidden_frame" class="btn soft">
+        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="handleCast(event, this.href, 'Soft')" class="btn soft">
             <span>Soft</span> <span>☁️</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" target="hidden_frame" class="btn popfm">
+        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="handleCast(event, this.href, 'PopFM')" class="btn popfm">
             <span>PopFM</span> <span>🎤</span>
         </a>
     </div>
 
-    <h2>Specials & Mix</h2>
+    <h2 style="font-size: 14px; color: #aaa; margin: 25px 0 10px 0; text-transform: uppercase;">Specials</h2>
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" target="hidden_frame" class="btn pop-mix">
+        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="handleCast(event, this.href, 'Pop Mix')" class="btn pop-mix">
             <span>Pop Mix</span> <span>🕺</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" target="hidden_frame" class="btn top-100">
+        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="handleCast(event, this.href, 'Top 100')" class="btn top-100">
             <span>Top 100</span> <span>🏆</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" target="hidden_frame" class="btn soft-modern">
+        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="handleCast(event, this.href, 'Soft Modern')" class="btn soft-modern">
             <span>Soft Modern</span> <span>🌿</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" target="hidden_frame" class="btn soft-classic">
+        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="handleCast(event, this.href, 'Soft Classic')" class="btn soft-classic">
             <span>Soft Classic</span> <span>🎻</span>
         </a>
     </div>
 
-    <iframe name="hidden_frame" id="hidden_frame"></iframe>
+    <video id="hidden-player" controls playsinline></video>
 
-    <p style="margin-top: 40px; color: #444; font-size: 11px; text-align: center;">
-        Optimerede til Web Video Caster
-    </p>
+    <script>
+        function handleCast(event, url, name) {
+            // 1. VIGTIGT: Stop browseren fra at åbne en ny fane/link
+            event.preventDefault();
+
+            const player = document.getElementById('hidden-player');
+            const info = document.getElementById('info');
+
+            // 2. Opdater den usynlige afspiller
+            player.src = url;
+            player.load();
+            
+            // 3. Start afspilning - dette trigger "Gult Play Ikon" eller Cast-menu i WVC
+            player.play().then(() => {
+                info.textContent = "Sender " + name + " til Chromecast...";
+            }).catch(err => {
+                info.textContent = "Tryk igen for at bekræfte";
+            });
+        }
+    </script>
 
 </body>
 </html>
