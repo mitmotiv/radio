@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Cast Dashboard</title>
+    <title>Radio Player & Cast</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -14,10 +14,13 @@
             align-items: center; 
             padding: 20px; 
             margin: 0;
+            padding-bottom: 140px; /* Plads til bunden */
         }
         
         h1 { margin-bottom: 5px; color: #f39c12; font-size: 28px; font-weight: 800; }
-        .status-text { color: #aaa; font-size: 14px; margin-bottom: 25px; }
+        .status-header { color: #aaa; font-size: 14px; margin-bottom: 25px; }
+        
+        h2 { width: 100%; max-width: 400px; font-size: 14px; color: #666; margin: 25px 0 10px 5px; text-transform: uppercase; letter-spacing: 2px; }
         
         .grid { 
             display: grid; 
@@ -27,11 +30,11 @@
             max-width: 400px; 
         }
         
+        /* Knapperne styles som links men styres af JS */
         .btn { 
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: none; 
             padding: 18px 25px; 
             border-radius: 16px; 
             text-decoration: none; 
@@ -40,10 +43,9 @@
             font-size: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             transition: transform 0.1s;
-            cursor: pointer;
         }
         
-        .btn:active { transform: scale(0.96); filter: brightness(1.2); }
+        .btn:active { transform: scale(0.97); }
 
         .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
@@ -55,73 +57,104 @@
         .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
         .soft-classic { background: linear-gradient(135deg, #5b7d87, #354a50); }
 
-        /* Skjul den rigtige afspiller helt */
-        #hidden-player { display: none; }
+        /* Fastgjort afspiller i bunden */
+        .footer-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #1e1e1e;
+            padding: 15px 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid #333;
+            z-index: 100;
+        }
+
+        #current-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        audio {
+            width: 90%;
+            max-width: 400px;
+            height: 40px;
+        }
     </style>
 </head>
 <body>
 
     <h1>Radio Cast</h1>
-    <p id="info" class="status-text">Vælg station for at caste</p>
+    <p class="status-header">Tryk på en station for at vælge</p>
 
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="handleCast(event, this.href, 'Nova')" class="btn nova">
+        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="castControl(event, this.href, 'Nova')" class="btn nova">
             <span>Nova</span> <span>✨</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="handleCast(event, this.href, 'Radio 100')" class="btn radio100">
+        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="castControl(event, this.href, 'Radio 100')" class="btn radio100">
             <span>Radio 100</span> <span>💯</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="handleCast(event, this.href, 'The Voice')" class="btn the-voice">
+        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="castControl(event, this.href, 'The Voice')" class="btn the-voice">
             <span>The Voice</span> <span>💬</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="handleCast(event, this.href, 'Soft')" class="btn soft">
+        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="castControl(event, this.href, 'Soft')" class="btn soft">
             <span>Soft</span> <span>☁️</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="handleCast(event, this.href, 'PopFM')" class="btn popfm">
+        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="castControl(event, this.href, 'PopFM')" class="btn popfm">
             <span>PopFM</span> <span>🎤</span>
         </a>
     </div>
 
-    <h2 style="font-size: 14px; color: #aaa; margin: 25px 0 10px 0; text-transform: uppercase;">Specials</h2>
+    <h2>Specials & Mix</h2>
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="handleCast(event, this.href, 'Pop Mix')" class="btn pop-mix">
+        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="castControl(event, this.href, 'Pop Mix')" class="btn pop-mix">
             <span>Pop Mix</span> <span>🕺</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="handleCast(event, this.href, 'Top 100')" class="btn top-100">
+        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="castControl(event, this.href, 'Top 100')" class="btn top-100">
             <span>Top 100</span> <span>🏆</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="handleCast(event, this.href, 'Soft Modern')" class="btn soft-modern">
+        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="castControl(event, this.href, 'Soft Modern')" class="btn soft-modern">
             <span>Soft Modern</span> <span>🌿</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="handleCast(event, this.href, 'Soft Classic')" class="btn soft-classic">
+        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="castControl(event, this.href, 'Soft Classic')" class="btn soft-classic">
             <span>Soft Classic</span> <span>🎻</span>
         </a>
     </div>
 
-    <video id="hidden-player" controls playsinline></video>
+    <div class="footer-player">
+        <div id="current-label">Vælg en station</div>
+        <audio id="main-player" controls playsinline>
+            <source id="audio-src" src="" type="audio/aac">
+        </audio>
+    </div>
 
     <script>
-        function handleCast(event, url, name) {
-            // 1. VIGTIGT: Stop browseren fra at åbne en ny fane/link
+        const player = document.getElementById('main-player');
+        const source = document.getElementById('audio-src');
+        const label = document.getElementById('current-label');
+
+        function castControl(event, url, name) {
+            // Forhindrer ny fane
             event.preventDefault();
 
-            const player = document.getElementById('hidden-player');
-            const info = document.getElementById('info');
-
-            // 2. Opdater den usynlige afspiller
-            player.src = url;
-            player.load();
+            // Opdater afspilleren
+            source.src = url;
+            label.textContent = "Klar til cast: " + name;
             
-            // 3. Start afspilning - dette trigger "Gult Play Ikon" eller Cast-menu i WVC
-            player.play().then(() => {
-                info.textContent = "Sender " + name + " til Chromecast...";
-            }).catch(err => {
-                info.textContent = "Tryk igen for at bekræfte";
-            });
+            player.load();
+            player.play();
+
+            // Når player.play() kaldes, vil Web Video Caster se aktiviteten
+            // og det gule play-ikon i appen vil lyse op.
         }
     </script>
 
