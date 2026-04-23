@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Player Pro</title>
+    <title>Radio Player</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -14,10 +14,18 @@
             align-items: center; 
             padding: 20px; 
             margin: 0;
-            padding-bottom: 150px;
+            padding-bottom: 160px; /* God plads til afspilleren */
         }
         
-        h1 { margin-bottom: 5px; color: #f39c12; font-size: 28px; font-weight: 800; }
+        /* Denne overskrift ændrer vi med JavaScript */
+        #main-title { 
+            margin-bottom: 5px; 
+            color: #f39c12; 
+            font-size: 28px; 
+            font-weight: 800; 
+            text-align: center;
+        }
+
         .status-header { color: #aaa; font-size: 14px; margin-bottom: 25px; }
         
         .grid { 
@@ -28,7 +36,6 @@
             max-width: 400px; 
         }
         
-        /* Knapperne er links */
         .btn { 
             display: flex;
             align-items: center;
@@ -42,10 +49,13 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             transition: transform 0.1s;
             -webkit-tap-highlight-color: transparent;
+            border: none;
+            cursor: pointer;
         }
         
         .btn:active { transform: scale(0.97); filter: brightness(1.2); }
 
+        /* Farveprofiler */
         .nova { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .radio100 { background: linear-gradient(135deg, #3498db, #2980b9); }
         .the-voice { background: #ffffff; color: #000; }
@@ -56,6 +66,7 @@
         .soft-modern { background: linear-gradient(135deg, #7ec9ac, #4d8c75); }
         .soft-classic { background: linear-gradient(135deg, #5b7d87, #354a50); }
 
+        /* Bund-afspiller sektion */
         .footer-player {
             position: fixed;
             bottom: 0;
@@ -63,7 +74,7 @@
             width: 100%;
             background: #1e1e1e;
             padding: 20px 0;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -72,115 +83,108 @@
         }
 
         #current-label {
-            font-size: 14px;
-            margin-bottom: 10px;
+            font-size: 16px;
+            margin-bottom: 12px;
             color: #f39c12;
             font-weight: bold;
+            letter-spacing: 1px;
         }
 
-        /* Vi bruger et video-tag (selvom det er lyd), da WVC ofte genkender det bedre */
+        /* Video tag for bedst mulige WVC detection */
         video {
             width: 90%;
             max-width: 400px;
-            height: 50px;
+            height: 54px;
             background: #000;
-            border-radius: 8px;
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Radio Cast</h1>
-    <p class="status-header">Tryk for at vælge station</p>
+    <h1 id="main-title">Vælg Radio</h1>
+    <p class="status-header">Tryk for at starte stream</p>
 
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="return playStream(event, this.href, 'Nova')" class="btn nova">
+        <a href="https://live-bauerdk.sharp-stream.com/nova-premium_96.aac" onclick="return startRadio(event, this.href, 'Nova')" class="btn nova">
             <span>Nova</span> <span>✨</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="return playStream(event, this.href, 'Radio 100')" class="btn radio100">
+        <a href="https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac" onclick="return startRadio(event, this.href, 'Radio 100')" class="btn radio100">
             <span>Radio 100</span> <span>💯</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="return playStream(event, this.href, 'The Voice')" class="btn the-voice">
+        <a href="https://live-bauerdk.sharp-stream.com/thevoice-premium_96.aac" onclick="return startRadio(event, this.href, 'The Voice')" class="btn the-voice">
             <span>The Voice</span> <span>💬</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="return playStream(event, this.href, 'Soft')" class="btn soft">
+        <a href="https://live-bauerdk.sharp-stream.com/soft-premium_96.aac" onclick="return startRadio(event, this.href, 'Soft')" class="btn soft">
             <span>Soft</span> <span>☁️</span>
         </a>
 
-        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="return playStream(event, this.href, 'PopFM')" class="btn popfm">
+        <a href="https://live-bauerdk.sharp-stream.com/popfm-premium_96.aac" onclick="return startRadio(event, this.href, 'PopFM')" class="btn popfm">
             <span>PopFM</span> <span>🎤</span>
         </a>
     </div>
 
-    <h2>Specials</h2>
+    <h2 style="font-size: 12px; color: #444; margin: 30px 0 10px 0; text-transform: uppercase;">Special kanaler</h2>
     <div class="grid">
-        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="return playStream(event, this.href, 'Pop Mix')" class="btn pop-mix">
+        <a href="https://live-bauerdk.sharp-stream.com/mix7-premium_96.aac" onclick="return startRadio(event, this.href, 'Pop Mix')" class="btn pop-mix">
             <span>Pop Mix</span> <span>🕺</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="return playStream(event, this.href, 'Top 100')" class="btn top-100">
+        <a href="https://live-bauerdk.sharp-stream.com/RP25_premium_96.aac" onclick="return startRadio(event, this.href, 'Top 100')" class="btn top-100">
             <span>Top 100</span> <span>🏆</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="return playStream(event, this.href, 'Soft Modern')" class="btn soft-modern">
+        <a href="https://live-bauerdk.sharp-stream.com/RP09_premium_96.aac" onclick="return startRadio(event, this.href, 'Soft Modern')" class="btn soft-modern">
             <span>Soft Modern</span> <span>🌿</span>
         </a>
-        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="return playStream(event, this.href, 'Soft Classic')" class="btn soft-classic">
+        <a href="https://live-bauerdk.sharp-stream.com/RP08_premium_96.aac" onclick="return startRadio(event, this.href, 'Soft Classic')" class="btn soft-classic">
             <span>Soft Classic</span> <span>🎻</span>
         </a>
     </div>
 
     <div class="footer-player">
-        <div id="current-label">Vælg en station</div>
-        <video id="main-player" controls playsinline title="Radio Stream"></video>
+        <div id="current-label">Ingen station valgt</div>
+        <video id="player" controls playsinline></video>
     </div>
 
     <script>
-        const player = document.getElementById('main-player');
-        const label = document.getElementById('current-label');
+        const player = document.getElementById('player');
+        const mainTitle = document.getElementById('main-title');
+        const footerLabel = document.getElementById('current-label');
 
-        function playStream(e, url, name) {
-            // 1. Stop normal link-navigation (ingen ny fane)
+        function startRadio(e, url, name) {
+            // Forhindrer ny fane/side
             e.preventDefault();
 
-            // 2. Opdater UI
-            label.textContent = "Klar: " + name;
+            // 1. Opdater navnet øverst på siden
+            mainTitle.textContent = name;
             
-            // 3. VIGTIGT FOR WVC: 
-            // Vi sætter URL'en direkte og kalder load() med det samme.
+            // 2. Opdater navnet i afspilleren i bunden
+            footerLabel.textContent = "Spiller nu: " + name;
+
+            // 3. Opdater selve browserens fane-titel
+            document.title = "▶ " + name;
+
+            // 4. Konfigurer stream til Web Video Caster
             player.src = url;
-            player.type = "audio/aac"; // Fortæller præcis hvad det er
-            player.title = name;
+            player.type = "audio/aac";
+            player.title = name; // Vigtigt metadata for WVC
             
             player.load();
-            
-            // 4. Start afspilning
-            const playPromise = player.play();
+            player.play().catch(err => console.log("Play blocked by browser"));
 
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    // Her kan WVC nu se den aktive originale stream
-                    console.log("Afspiller " + name);
-                }).catch(error => {
-                    console.log("Afspilning fejlede: " + error);
-                });
-            }
-
-            // Returner false for en sikkerheds skyld
-            return false;
-        }
-
-        // Metadata til mobilen/Chromecast (Media Session API)
-        player.addEventListener('play', () => {
+            // Media Session gør at navnet også står på telefonens låseskærm
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: player.title,
+                    title: name,
                     artist: 'Radio Stream',
                     album: 'Live'
                 });
             }
-        });
+
+            return false;
+        }
     </script>
 
 </body>
