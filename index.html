@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Radio Pro">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/306/306424.png">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Logo-de-World-Hits-Radio.png/960px-Logo-de-World-Hits-Radio.png?_=20201026215747">
     
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJiaW5kZXIiOiAiUmFkaW8gRGFubWFyayBQcm8iLAogICJzaG9ydF9uYW1lIjogIlJhZGlvIFBybyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDgwODA4IiwKICAidGhlbWVfY29sb3IiOiAiIzA4MDgwOCIKfQ==">
 
@@ -237,10 +237,9 @@
     </div>
 </div>
 
-<video id="audio-engine" playsinline x-webkit-airplay="allow"></video>
+<audio id="audio-engine" playsinline x-webkit-airplay="allow"></audio>
 
 <script>
-    // Opdateret stationliste med HTTPS streams
     const stations = [
         { id: 'nova', name: 'Nova', cat: 'Populære', icon: '✨', url: 'https://live-bauerdk.sharp-stream.com/nova-premium_96.aac', class: 'nova' },
         { id: 'r100', name: 'Radio 100', cat: 'Populære', icon: '💯', url: 'https://live-bauerdk.sharp-stream.com/radio100-premium_96.aac', class: 'r100' },
@@ -279,12 +278,10 @@
     let currentStationId = null;
     let activeStationName = "Radio Danmark Pro";
 
-    // Initialiser volumen fra hukommelse
     const savedVol = localStorage.getItem('radioVol') || 1;
     engine.volume = savedVol;
     volSlider.value = savedVol;
 
-    // MediaSession setup (Låseskærm)
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', () => engine.play());
         navigator.mediaSession.setActionHandler('pause', () => engine.pause());
@@ -428,7 +425,6 @@
 
     document.getElementById('searchInput').oninput = (e) => render(e.target.value);
     
-    // Ryd op i HLS ved lukning
     window.onunload = () => hls.destroy();
 
     render();
